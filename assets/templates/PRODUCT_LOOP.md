@@ -2,6 +2,7 @@
 
 Product surface:
 Optimization goal:
+Intent:
 Pattern: daily-product-triage
 Profiles: ux-product, engineering-quality
 Readiness level: L1 report-only
@@ -42,6 +43,8 @@ See `product-loop-budget.md`.
 
 ## Run-Until-Done
 
+Primary metric:
+Baseline window:
 Target:
 Target minimum:
 Max iterations:

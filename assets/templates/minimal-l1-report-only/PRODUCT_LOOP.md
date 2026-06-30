@@ -2,6 +2,7 @@
 
 Product surface:
 Optimization goal:
+Intent: UX_OPTIMIZE + ENGINEERING_QUALITY
 Pattern: daily-product-triage
 Profiles: ux-product, engineering-quality, content-docs
 Readiness level: L1 report-only

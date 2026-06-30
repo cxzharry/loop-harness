@@ -20,6 +20,8 @@ Verification:
 
 Use for activation, conversion, retention, completion rate, funnel movement, onboarding drop-off, or growth experiments.
 
+Before actioning, confirm the primary metric, baseline window, target threshold, and whether proxy evidence is acceptable while waiting for real post-change data.
+
 Discovery:
 - Query real analytics or logs when available.
 - Identify event taxonomy and baseline windows.

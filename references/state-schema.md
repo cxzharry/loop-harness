@@ -6,6 +6,7 @@ Use these artifacts for persistent product optimization loops.
 
 Purpose:
 - Product surface and optimization goal.
+- Detected intent and any user-confirmed metric/target/risk decisions.
 - Pattern id from `product-loop-patterns.json` when using a reusable loop.
 - Profiles enabled.
 - Cadence and rollout level.
@@ -20,10 +21,12 @@ Required sections:
 - Last run.
 - Active opportunity.
 - Execution mode, current iteration, target, latest verdict, and stop condition.
+- Primary metric, baseline window, and user confirmations when metric-based.
 - Candidate backlog.
 - Watch list.
 - Failed attempts and do-not-retry notes.
 - Human decisions.
+- User confirmations.
 - Data gaps and instrumentation needs.
 - Next scheduled action.
 

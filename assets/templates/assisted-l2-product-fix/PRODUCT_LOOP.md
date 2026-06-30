@@ -2,6 +2,7 @@
 
 Product surface:
 Optimization goal:
+Intent: UX_OPTIMIZE
 Pattern: ux-sweeper
 Profiles: ux-product, engineering-quality
 Readiness level: L2 assisted optimization

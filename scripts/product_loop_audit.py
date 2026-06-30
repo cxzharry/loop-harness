@@ -26,6 +26,7 @@ PROFILES = [
 GATES = ["human gate", "denylist", "kill switch", "budget"]
 BUDGET_FIELDS = ["max runs", "max iterations", "max actioning changes", "kill switch", "escalation"]
 ITERATION_FIELDS = ["execution mode", "current iteration", "target", "latest verdict", "stop condition"]
+INTENT_FIELDS = ["intent", "primary metric", "baseline window", "user confirmations"]
 STOP_CONDITIONS = ["success", "exhausted", "plateau", "regression", "budget", "human_gate", "env", "unknown"]
 PATTERN_FILE = "product-loop-patterns.json"
 STARTER_DIRS = [
@@ -117,6 +118,14 @@ def main() -> int:
     else:
         findings.append("OK run-until-done state fields present")
 
+    intent_hits = [field for field in INTENT_FIELDS if field in combined]
+    score += len(intent_hits) * 2
+    missing_intent_fields = sorted(set(INTENT_FIELDS) - set(intent_hits))
+    if missing_intent_fields:
+        findings.append(f"WARN intent/metric confirmation fields incomplete: {', '.join(missing_intent_fields)}")
+    else:
+        findings.append("OK intent and metric confirmation fields present")
+
     stop_hits = [condition for condition in STOP_CONDITIONS if condition in combined]
     score += min(8, len(stop_hits))
     missing_stop_conditions = sorted(set(STOP_CONDITIONS) - set(stop_hits))
@@ -169,6 +178,7 @@ def main() -> int:
         and not missing_gates
         and not missing_budget_fields
         and not missing_iteration_fields
+        and not missing_intent_fields
         and not missing_stop_conditions
         and has_state_activity
         and has_run_log_entries

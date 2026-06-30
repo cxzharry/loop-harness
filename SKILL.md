@@ -19,19 +19,46 @@ Every run follows exactly five phases:
 
 Do not skip a phase. If a phase lacks evidence, record the gap and route the run to instrumentation, human handoff, or report-only mode.
 
+## Intent Detection And User Confirmation
+
+State intent before choosing profiles or execution mode:
+
+- `UX_OPTIMIZE`: improve a screen, flow, copy, accessibility, or product comprehension.
+- `METRIC_OPTIMIZE`: improve activation, conversion, retention, completion, revenue, or funnel movement.
+- `ENGINEERING_QUALITY`: fix bugs, performance, CI, reliability, or product-affecting technical quality.
+- `RELEASE_READY`: prepare a changed product surface for deployment or release.
+- `INSTRUMENT`: add or repair analytics/observability before claiming product improvement.
+- `POST_LAUNCH_LEARN`: learn from shipped behavior, support, feedback, metrics, and errors.
+
+Default intent:
+- If the user asks to "improve/optimize product" without a metric, use `UX_OPTIMIZE + ENGINEERING_QUALITY` in `report-only` or `action-once`.
+- If the user names conversion, activation, retention, funnel, revenue, experiment, or metric, use `METRIC_OPTIMIZE`; require a metric decision before `run-until-done`.
+- If metrics are desired but unavailable or untrusted, switch to `INSTRUMENT`.
+
+Use `AskUserQuestion` only for real decisions that cannot be safely inferred:
+- Which primary product surface or user flow to optimize.
+- Which primary metric to optimize when `METRIC_OPTIMIZE` or `run-until-done` depends on a metric.
+- Which target threshold defines done.
+- Whether to cross a human gate: pricing, payment, auth, permissions, secrets, destructive migration, legal/compliance, brand-sensitive copy, or major product direction.
+- Whether to enable scheduled/actioning loops when cost or risk is material.
+
+Do not ask when a safe default exists. Instead, record the assumption in `PRODUCT_LOOP_STATE.md` and continue. Prefer 2-3 concrete choices when asking.
+
 ## Start Of Run
 
-1. Identify the product surface: app, route, prototype, docs, repo, release, or metric area.
-2. Load existing loop artifacts if present:
+1. Identify intent and state it in one line.
+2. Identify the product surface: app, route, prototype, docs, repo, release, or metric area.
+3. Load existing loop artifacts if present:
    - `PRODUCT_LOOP.md`
    - `PRODUCT_LOOP_STATE.md`
    - `product-loop-run-log.md`
    - `product-loop-budget.md`
-3. If artifacts are missing and the user wants an ongoing loop, scaffold from `assets/templates/`.
-4. Select one or more optimization profiles. See `references/profiles.md`.
-5. Select a product loop pattern when cadence or recurring scope matters. See `references/patterns.md` and `assets/templates/product-loop-patterns.json`.
-6. Run `scripts/product_loop_audit.py <repo-or-folder>` when artifacts exist or after scaffolding.
-7. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
+4. If artifacts are missing and the user wants an ongoing loop, scaffold from `assets/templates/`.
+5. Select one or more optimization profiles. See `references/profiles.md`.
+6. Select a product loop pattern when cadence or recurring scope matters. See `references/patterns.md` and `assets/templates/product-loop-patterns.json`.
+7. Ask only for unresolved metric/target/risk/schedule decisions listed above.
+8. Run `scripts/product_loop_audit.py <repo-or-folder>` when artifacts exist or after scaffolding.
+9. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
 
 ## Execution Modes
 
@@ -49,6 +76,12 @@ Choose one mode at the start of each run:
 - Stop conditions and human gates written to state before actioning.
 
 If these are missing, downgrade to `report-only` or ask for the missing decision.
+
+For metric-based run-until-done, confirm:
+- Primary metric.
+- Baseline window.
+- Target threshold.
+- Minimum sample/window or proxy evidence allowed before final judgment.
 
 ## Run-Until-Done Controller
 
@@ -183,6 +216,9 @@ End each run with:
 
 ```markdown
 ## Loop Harness Report
+
+### Intent
+<detected intent, assumptions, and user confirmations>
 
 ### Profile
 <profiles used>

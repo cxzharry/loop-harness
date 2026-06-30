@@ -2,6 +2,7 @@
 
 Product surface:
 Optimization goal:
+Intent:
 Pattern: daily-product-triage
 Profiles: ux-product, metrics-growth, engineering-quality
 Readiness level: L3 scheduled/unattended-capable

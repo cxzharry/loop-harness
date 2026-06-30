@@ -1,6 +1,9 @@
 # Product Loop State
 
 Last run: never
+Intent:
+Primary metric:
+Baseline window:
 Execution mode: report-only
 Current iteration: 0
 Target:
@@ -25,6 +28,8 @@ Scheduling:
 ## Iteration History
 
 ## Human Decisions
+
+## User Confirmations
 
 ## Data Gaps / Instrumentation Needs
 
