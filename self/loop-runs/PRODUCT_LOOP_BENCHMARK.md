@@ -25,8 +25,10 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
   - `benchmark/run_pressure_eval.py` reads `benchmark/manifest.json`.
   - Missing transcripts fail rather than pass silently.
   - Critical cases require score `>=8/10`.
+  - Skipped or not-run required checks do not count as positive evidence.
+  - Failed-iteration promotion transcripts must include filled Raw Run Result, Finding, and Benchmark Promotion sections.
 - Screenshot/trace evidence: not applicable
-- Last verified: 2026-06-30T04:53:51Z
+- Last verified: 2026-06-30T07:17:26Z
 
 ## Regression Checks
 
@@ -46,7 +48,56 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Source run-log entry: 2026-06-30T07:04:04Z
 - Why it matters: separate error-log or findings files make promotion provenance harder to audit and can split the evidence chain.
 
+- Check: Benchmark and artifact audit scoring must reject skipped/not-run checks, negated evidence, and unfilled structured fields.
+- Source run-log entry: 2026-06-30T07:17:26Z
+- Why it matters: loop-harness can only prevent regressions if its benchmarks distinguish real verification from superficial text mentions.
+
 ## Regression Cases
+
+## Regression Case: ux-skipped-taste-slop-must-fail
+
+- Source run-log entry: 2026-06-30T07:17:26Z
+- Error class: scope_regression
+- Surface/URL: `benchmark/run_pressure_eval.py`, `benchmark/manifest.json`
+- Trigger condition: transcript for UX/UI visual-quality work says `design-taste-frontend` or `design-slop-ban` was skipped, not run, omitted, bypassed, or not applied.
+- Playwright steps: not applicable
+- Expected result: `ux_requires_taste_slop_benchmark` fails and reports forbidden skipped/not-run evidence.
+- Failure evidence: pre-fix scoring could count a skipped taste/slop mention as satisfying required patterns.
+- Matching rule: any change to UX/UI benchmark manifest patterns or pressure scoring evidence matching.
+- Owner profile: engineering-quality, ux-product
+- Last failed: 2026-06-30T07:17:26Z pre-fix review
+- Last passed: 2026-06-30T07:17:26Z
+- Status: active
+
+## Regression Case: negated-artifact-evidence-caps-readiness
+
+- Source run-log entry: 2026-06-30T07:17:26Z
+- Error class: scope_regression
+- Surface/URL: `scripts/product_loop_audit.py`
+- Trigger condition: target artifacts include claims such as `No human gate`, `Playwright not run`, `No finding`, `Benchmark Promotion not filled`, or `Integration verification not executed`.
+- Playwright steps: not applicable
+- Expected result: audit reports `MISS negated evidence claims present` and caps readiness below passing level.
+- Failure evidence: pre-fix audit could treat negated text as positive field coverage.
+- Matching rule: any change to product-loop audit field matching, scoring caps, or evidence parsing.
+- Owner profile: engineering-quality
+- Last failed: 2026-06-30T07:17:26Z pre-fix review
+- Last passed: 2026-06-30T07:17:26Z
+- Status: active
+
+## Regression Case: failed-iteration-promotion-requires-filled-sections
+
+- Source run-log entry: 2026-06-30T07:17:26Z
+- Error class: scope_regression
+- Surface/URL: `benchmark/manifest.json`, `benchmark/run_pressure_eval.py`
+- Trigger condition: failed-iteration promotion transcript mentions finding or promotion words but lacks filled `Raw Run Result`, `Finding`, or `Benchmark Promotion` fields.
+- Playwright steps: not applicable
+- Expected result: `failed_iteration_promotes_benchmark` fails with missing section or field messages.
+- Failure evidence: pre-fix benchmark could pass from word presence without durable field completion.
+- Matching rule: any change to failed-iteration promotion benchmark case, manifest schema, or pressure scorer section parsing.
+- Owner profile: engineering-quality, content-docs
+- Last failed: 2026-06-30T07:17:26Z pre-fix review
+- Last passed: 2026-06-30T07:17:26Z
+- Status: active
 
 ## Regression Case: sample-case-id
 

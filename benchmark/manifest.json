@@ -57,7 +57,9 @@
         "\\bPASS\\b[\\s\\S]{0,240}\\bno taste\\b",
         "\\bPASS\\b[\\s\\S]{0,240}\\bno slop\\b",
         "\\bPASS\\b[\\s\\S]{0,240}\\bstatic (review|inspection)\\b",
-        "\\bPASS\\b[\\s\\S]{0,240}\\bwithout\\b[\\s\\S]{0,80}\\bvisual benchmark\\b"
+        "\\bPASS\\b[\\s\\S]{0,240}\\bwithout\\b[\\s\\S]{0,80}\\bvisual benchmark\\b",
+        "\\b(skip|skipped|skipping|not run|not executed|not used|not applied|omitted|bypassed)\\b[\\s\\S]{0,160}\\b(design-taste-frontend|design-slop-ban|taste|slop|benchmark)\\b",
+        "\\b(design-taste-frontend|design-slop-ban|taste|slop|benchmark)\\b[\\s\\S]{0,160}\\b(skip|skipped|skipping|not run|not executed|not used|not applied|omitted|bypassed)\\b"
       ]
     },
     {
@@ -83,6 +85,42 @@
       "forbidden_patterns": [
         "\\bFAIL\\b[\\s\\S]{0,240}\\bBenchmark regression case\\b[\\s\\S]{0,80}\\bnone\\b",
         "\\berror-log\\.md\\b|\\bfindings\\.md\\b|\\brun-log-error\\.md\\b"
+      ],
+      "required_sections": [
+        {
+          "name": "Raw Run Result",
+          "required_fields": [
+            "Verdict",
+            "Verification evidence",
+            "Error output",
+            "Failed assertions"
+          ]
+        },
+        {
+          "name": "Finding",
+          "required_fields": [
+            "Finding id",
+            "Error class",
+            "Symptom",
+            "Evidence",
+            "Root cause/hypothesis",
+            "Reproduction steps",
+            "Severity",
+            "Confidence",
+            "Status"
+          ]
+        },
+        {
+          "name": "Benchmark Promotion",
+          "required_fields": [
+            "Promotion decision",
+            "Benchmark case id",
+            "Matching rule",
+            "Expected result",
+            "Verification command",
+            "Status"
+          ]
+        }
       ]
     },
     {

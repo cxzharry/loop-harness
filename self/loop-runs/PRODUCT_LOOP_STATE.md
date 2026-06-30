@@ -1,22 +1,22 @@
 # Product Loop State
 
-Last run: 2026-06-30T07:04:04Z
+Last run: 2026-06-30T07:17:26Z
 Intent: ENGINEERING_QUALITY
 Primary metric: pressure benchmark case score
 Baseline window: before `benchmark/` behavior benchmark scaffold
 Execution mode: run-until-done
-Current iteration: 4
+Current iteration: 5
 Target: all critical pressure benchmark cases score `>=8/10`
 Latest verdict: PASS
 Stop condition: SUCCESS
 
 ## Active Opportunity
 
-Enforce one active run log per loop context, with raw run result, finding, and benchmark promotion in the same entry.
+Harden benchmark and audit evidence checks so skipped or negated evidence cannot pass as completed verification.
 
 Handoff: single-agent implementation in current coordinator workspace
-Verification: py_compile, self-loop audit, template audit, pressure eval synthetic smoke, skill quick_validate
-Persistence: self-loop artifacts under `self/loop-runs/`, run-log finding schema, installed skill sync
+Verification: py_compile, self-loop audit, template audit, UX skipped negative smoke, negated artifact smoke, pressure eval synthetic smoke, missing transcript negative smoke, skill quick_validate
+Persistence: self-loop artifacts under `self/loop-runs/`, active benchmark regressions for false-positive scoring, installed skill sync
 Scheduling: stop_success
 
 ## Execution Orchestration
@@ -27,7 +27,7 @@ Agent task ids: single-run-log-finding-schema
 Worktree strategy: current coordinator workspace; no parallel file-changing agents used
 Integration owner: coordinator
 Conflict review: no parallel agent conflicts
-Integrated verification: source py_compile pass, source self-loop audit L3 100/100, template audit L2 87/100, synthetic pressure eval PASS 10/10 across 7 cases, missing-transcript negative smoke FAIL as expected, cost smoke OK, source quick_validate pass, installed sync pass, installed quick_validate pass, installed self-loop audit L3 100/100, installed run-log path check pass
+Integrated verification: source py_compile pass, source self-loop audit L3 100/100, template audit L2 87/100, UX skipped/not-run transcript smoke FAIL as expected, negated artifact smoke L1 59/100 as expected, synthetic pressure eval PASS 10/10 across 7 cases, missing-transcript negative smoke FAIL as expected, cost smoke OK, source quick_validate pass, installed sync pass, installed quick_validate pass, installed self-loop audit L3 100/100, installed template audit L2 87/100, installed py_compile pass, installed synthetic pressure eval PASS 10/10 across 7 cases, installed UX skipped/not-run smoke FAIL as expected
 
 ## Candidate Backlog
 
@@ -49,10 +49,12 @@ Integrated verification: source py_compile pass, source self-loop audit L3 100/1
 - Do not claim UX/UI visual-quality PASS from Playwright alone when visual quality matters.
 - Do not put skill self-run logs or state back at package root.
 - Do not promote a benchmark case from a failure until the run-log entry contains a structured finding.
+- Do not treat skipped/not-run benchmark mentions as positive evidence.
+- Do not treat negated artifact statements such as `No human gate`, `Playwright not run`, or `Benchmark Promotion not filled` as passing evidence.
 
 ## Active Benchmark Regressions
 
-None.
+- `false-positive-benchmark-audit-hardening`: skipped UX benchmark transcripts fail, negated artifact evidence is capped below pass, and failed-iteration promotion requires filled structured sections.
 
 ## Iteration History
 
@@ -60,6 +62,7 @@ None.
 - 2026-06-30T05:20:25Z: Added combined `design-taste-frontend` and `design-slop-ban` UX/UI visual-quality benchmark gate; verified source and installed skill.
 - 2026-06-30T05:29:01Z: Moved self-eval suite to `benchmark/`, moved self-run artifacts to `self/loop-runs/`, and added UX/UI benchmark criteria; source verification passed.
 - 2026-06-30T07:04:04Z: Added single run-log schema with Raw Run Result, Finding, and Benchmark Promotion; source and installed verification passed.
+- 2026-06-30T07:17:26Z: Hardened benchmark/audit scoring against skipped checks, negated evidence, and unfilled structured fields; source and installed verification passed.
 
 ## Human Decisions
 

@@ -90,6 +90,28 @@ CASE_HEADING_RE = re.compile(r"^##\s+Regression Case:\s*(.+?)\s*$", re.IGNORECAS
 FIELD_RE = re.compile(r"^-[ \t]*([^:]+):[ \t]*(.*?)[ \t]*$", re.IGNORECASE | re.MULTILINE)
 VERDICT_RE = re.compile(r"\bverdict\s*:\s*(fail|regression|partial|env|unknown)\b", re.IGNORECASE)
 RUN_LOG_ENTRY_RE = re.compile(r"^###\s+\d{4}-\d{2}-\d{2}t\d{2}:\d{2}:\d{2}z\b", re.IGNORECASE | re.MULTILINE)
+NEGATED_EVIDENCE_RE = re.compile(
+    r"("
+    r"\b(no|missing|absent)[^\n]{0,80}\b("
+    r"human gate|denylist|kill switch|budget|playwright|assertions|verification|promotion|benchmark|"
+    r"finding|raw run result|benchmark promotion|execution strategy|worktree map|conflict review|integration verification"
+    r")\b"
+    r"|"
+    r"\b("
+    r"human gate|denylist|kill switch|budget|playwright|assertions|verification|promotion|benchmark|"
+    r"finding|raw run result|benchmark promotion|execution strategy|worktree map|conflict review|integration verification"
+    r")[^\n]{0,80}\b(not run|not executed|not filled|not available|listed but not filled|placeholder only)\b"
+    r")",
+    re.IGNORECASE,
+)
+POLICY_LINE_RE = re.compile(
+    r"("
+    r"\b(do not|don't|should not|must not|not yet present)\b"
+    r"|rule:|baseline value:|symptom:|trigger condition:|reproduction steps:|failure evidence:"
+    r"|\bcode review found\b|\bpre-fix\b|\bfailed as expected\b|\bkeep schema detection separate\b|\bdid not require\b"
+    r")",
+    re.IGNORECASE,
+)
 
 
 def read(path: Path) -> str:
@@ -108,6 +130,48 @@ def read_artifact(root: Path, key: str, filename: str) -> str:
         if content:
             return content
     return ""
+
+
+def has_positive_field(content: str, field: str) -> bool:
+    pattern = re.compile(re.escape(field), re.IGNORECASE)
+    for line in content.splitlines():
+        if not pattern.search(line):
+            continue
+        if not NEGATED_EVIDENCE_RE.search(line):
+            return True
+    return False
+
+
+def present_fields(content: str, fields: list[str]) -> list[str]:
+    return [field for field in fields if has_positive_field(content, field)]
+
+
+def normalize_label(value: str) -> str:
+    return re.sub(r"\s+", " ", value.strip().lower())
+
+
+def structured_field_hits(content: str, fields: list[str]) -> list[str]:
+    field_labels = {normalize_label(label) for label, _value in FIELD_RE.findall(content)}
+    headings = {
+        normalize_label(match.group(1))
+        for match in re.finditer(r"^#{2,6}\s+(.+?)\s*$", content, re.IGNORECASE | re.MULTILINE)
+    }
+    hits: list[str] = []
+    for field in fields:
+        normalized = normalize_label(field)
+        if normalized in field_labels or normalized in headings:
+            hits.append(field)
+    return hits
+
+
+def negated_evidence_claims(content: str) -> list[str]:
+    claims: list[str] = []
+    for line in content.splitlines():
+        if POLICY_LINE_RE.search(line):
+            continue
+        if NEGATED_EVIDENCE_RE.search(line):
+            claims.append(line.strip())
+    return claims
 
 
 def load_patterns(root: Path) -> list[dict]:
@@ -200,8 +264,9 @@ def main() -> int:
                 findings.append(f"MISS {filename}")
 
     combined = "\n".join(contents.values())
+    negated_evidence_hits = negated_evidence_claims(combined)
 
-    phase_hits = [phase for phase in PHASES if phase in combined]
+    phase_hits = present_fields(combined, PHASES)
     score += len(phase_hits) * 5
     missing_phases = sorted(set(PHASES) - set(phase_hits))
     if missing_phases:
@@ -209,14 +274,14 @@ def main() -> int:
     else:
         findings.append("OK all five phases referenced")
 
-    profile_hits = [profile for profile in PROFILES if profile in combined]
+    profile_hits = present_fields(combined, PROFILES)
     score += min(10, len(profile_hits) * 3)
     if profile_hits:
         findings.append(f"OK profiles: {', '.join(profile_hits)}")
     else:
         findings.append("WARN no optimization profile named")
 
-    gate_hits = [gate for gate in GATES if gate in combined]
+    gate_hits = present_fields(combined, GATES)
     score += len(gate_hits) * 4
     missing_gates = sorted(set(GATES) - set(gate_hits))
     if missing_gates:
@@ -224,7 +289,7 @@ def main() -> int:
     else:
         findings.append("OK budget, kill switch, denylist, and human gate present")
 
-    budget_hits = [field for field in BUDGET_FIELDS if field in contents["budget"]]
+    budget_hits = present_fields(contents["budget"], BUDGET_FIELDS)
     score += len(budget_hits) * 2
     missing_budget_fields = sorted(set(BUDGET_FIELDS) - set(budget_hits))
     if missing_budget_fields:
@@ -232,10 +297,13 @@ def main() -> int:
     else:
         findings.append("OK budget fields cover caps, kill switch, and escalation")
 
-    run_until_done_budget_hits = [field for field in RUN_UNTIL_DONE_BUDGET_FIELDS if field in contents["budget"] or field in combined]
+    run_until_done_budget_hits = [
+        field for field in RUN_UNTIL_DONE_BUDGET_FIELDS
+        if has_positive_field(contents["budget"], field) or has_positive_field(combined, field)
+    ]
     score += min(6, len(run_until_done_budget_hits) * 2)
-    has_plateau_patience = "plateau patience" in combined
-    has_safety_budget = any(field in combined for field in ["token", "time budget", "wall-clock", "kill switch"])
+    has_plateau_patience = has_positive_field(combined, "plateau patience")
+    has_safety_budget = any(has_positive_field(combined, field) for field in ["token", "time budget", "wall-clock", "kill switch"])
     missing_run_until_done_budget_fields = []
     if not has_plateau_patience:
         missing_run_until_done_budget_fields.append("plateau patience")
@@ -246,7 +314,7 @@ def main() -> int:
     else:
         findings.append("OK run-until-done safety budget and plateau patience present")
 
-    iteration_hits = [field for field in ITERATION_FIELDS if field in combined]
+    iteration_hits = present_fields(combined, ITERATION_FIELDS)
     score += len(iteration_hits) * 2
     missing_iteration_fields = sorted(set(ITERATION_FIELDS) - set(iteration_hits))
     if missing_iteration_fields:
@@ -254,7 +322,7 @@ def main() -> int:
     else:
         findings.append("OK run-until-done state fields present")
 
-    intent_hits = [field for field in INTENT_FIELDS if field in combined]
+    intent_hits = present_fields(combined, INTENT_FIELDS)
     score += len(intent_hits) * 2
     missing_intent_fields = sorted(set(INTENT_FIELDS) - set(intent_hits))
     if missing_intent_fields:
@@ -262,7 +330,7 @@ def main() -> int:
     else:
         findings.append("OK intent and metric confirmation fields present")
 
-    playwright_hits = [field for field in PLAYWRIGHT_FIELDS if field in combined]
+    playwright_hits = present_fields(combined, PLAYWRIGHT_FIELDS)
     score += len(playwright_hits) * 2
     missing_playwright_fields = sorted(set(PLAYWRIGHT_FIELDS) - set(playwright_hits))
     if missing_playwright_fields:
@@ -270,7 +338,7 @@ def main() -> int:
     else:
         findings.append("OK Playwright verification fields present")
 
-    promotion_hits = [field for field in PROMOTION_FIELDS if field in contents["log"]]
+    promotion_hits = present_fields(contents["log"], PROMOTION_FIELDS)
     score += len(promotion_hits) * 2
     missing_promotion_fields = sorted(set(PROMOTION_FIELDS) - set(promotion_hits))
     if missing_promotion_fields:
@@ -278,7 +346,7 @@ def main() -> int:
     else:
         findings.append("OK run-log promotion fields present")
 
-    finding_hits = [field for field in RUN_LOG_FINDING_FIELDS if field in contents["log"]]
+    finding_hits = structured_field_hits(contents["log"], RUN_LOG_FINDING_FIELDS)
     score += min(8, len(finding_hits))
     missing_finding_fields = sorted(set(RUN_LOG_FINDING_FIELDS) - set(finding_hits))
     if missing_finding_fields:
@@ -286,7 +354,7 @@ def main() -> int:
     else:
         findings.append("OK run-log raw result, finding, and benchmark promotion schema present")
 
-    benchmark_hits = [field for field in BENCHMARK_FIELDS if field in contents["benchmark"]]
+    benchmark_hits = present_fields(contents["benchmark"], BENCHMARK_FIELDS)
     score += len(benchmark_hits) * 2
     missing_benchmark_fields = sorted(set(BENCHMARK_FIELDS) - set(benchmark_hits))
     if missing_benchmark_fields:
@@ -294,7 +362,7 @@ def main() -> int:
     else:
         findings.append("OK benchmark promotion fields present")
 
-    orchestration_hits = [field for field in ORCHESTRATION_FIELDS if field in combined]
+    orchestration_hits = present_fields(combined, ORCHESTRATION_FIELDS)
     score += len(orchestration_hits) * 2
     missing_orchestration_fields = sorted(set(ORCHESTRATION_FIELDS) - set(orchestration_hits))
     if missing_orchestration_fields:
@@ -302,7 +370,7 @@ def main() -> int:
     else:
         findings.append("OK execution orchestration fields present")
 
-    regression_case_hits = [field for field in REGRESSION_CASE_FIELDS if field in contents["benchmark"]]
+    regression_case_hits = present_fields(contents["benchmark"], REGRESSION_CASE_FIELDS)
     score += min(10, len(regression_case_hits))
     missing_regression_case_fields = sorted(set(REGRESSION_CASE_FIELDS) - set(regression_case_hits))
     if missing_regression_case_fields:
@@ -324,7 +392,7 @@ def main() -> int:
     else:
         findings.append("OK no failed iterations require active regression cases yet")
 
-    stop_hits = [condition for condition in STOP_CONDITIONS if condition in combined]
+    stop_hits = present_fields(combined, STOP_CONDITIONS)
     score += min(8, len(stop_hits))
     missing_stop_conditions = sorted(set(STOP_CONDITIONS) - set(stop_hits))
     if missing_stop_conditions:
@@ -369,11 +437,16 @@ def main() -> int:
     else:
         findings.append("WARN no real run-log entries")
 
+    if negated_evidence_hits:
+        findings.append(f"MISS negated evidence claims present: {len(negated_evidence_hits)}")
+
     score = min(score, 100)
     if not (has_state_activity and has_run_log_entries):
         score = min(score, 87)
     if missing_promoted_regression_cases:
         score = min(score, 89)
+    if negated_evidence_hits:
+        score = min(score, 59)
     if (
         score >= 80
         and not missing_phases

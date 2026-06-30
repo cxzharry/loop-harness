@@ -11,6 +11,28 @@ from typing import Any
 
 
 BENCHMARK_DIR = Path(__file__).resolve().parent
+SECTION_RE = re.compile(r"^#{2,6}\s+(.+?)\s*$", flags=re.MULTILINE)
+FIELD_RE = re.compile(r"^-\s*([^:]+):\s*(.*?)\s*$", flags=re.MULTILINE)
+NEGATED_REQUIRED_RE = re.compile(
+    r"\b(skip|skipped|skipping|not run|not executed|not used|not applied|omitted|bypassed|superficial|superficially)\b",
+    flags=re.IGNORECASE,
+)
+BAD_FIELD_VALUES = {
+    "",
+    "-",
+    "none",
+    "n/a",
+    "na",
+    "not applicable",
+    "not_applicable",
+    "pending",
+    "tbd",
+    "todo",
+    "unknown",
+    "not run",
+    "not executed",
+    "not filled",
+}
 
 
 def load_manifest(path: Path) -> dict[str, Any]:
@@ -24,8 +46,73 @@ def read_text(path: Path) -> str:
         return ""
 
 
-def matches(pattern: str, text: str) -> bool:
+def is_negated_required_match(text: str, match: re.Match[str]) -> bool:
+    start = max(0, match.start() - 80)
+    end = min(len(text), match.end() + 80)
+    context = text[start:end]
+    return NEGATED_REQUIRED_RE.search(context) is not None
+
+
+def matches_required(pattern: str, text: str) -> bool:
+    for match in re.finditer(pattern, text, flags=re.IGNORECASE | re.MULTILINE):
+        if not is_negated_required_match(text, match):
+            return True
+    return False
+
+
+def matches_forbidden(pattern: str, text: str) -> bool:
     return re.search(pattern, text, flags=re.IGNORECASE | re.MULTILINE) is not None
+
+
+def normalize_label(value: str) -> str:
+    return re.sub(r"\s+", " ", value.strip().lower())
+
+
+def parse_sections(text: str) -> dict[str, str]:
+    matches = list(SECTION_RE.finditer(text))
+    sections: dict[str, str] = {}
+    for index, match in enumerate(matches):
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        sections[normalize_label(match.group(1))] = text[start:end]
+    return sections
+
+
+def parse_fields(section_text: str) -> dict[str, str]:
+    return {
+        normalize_label(label): value.strip()
+        for label, value in FIELD_RE.findall(section_text)
+    }
+
+
+def has_real_field_value(value: str) -> bool:
+    normalized = normalize_label(value)
+    if normalized in BAD_FIELD_VALUES:
+        return False
+    if re.search(r"\b(not run|not executed|not filled|placeholder only|listed but not filled)\b", normalized):
+        return False
+    return True
+
+
+def check_required_sections(case: dict[str, Any], transcript: str) -> list[str]:
+    missing: list[str] = []
+    sections = parse_sections(transcript)
+    for requirement in case.get("required_sections", []):
+        section_name = normalize_label(str(requirement.get("name", "")))
+        section_text = sections.get(section_name)
+        if section_text is None:
+            missing.append(f"section missing: {section_name}")
+            continue
+
+        fields = parse_fields(section_text)
+        for field_name in requirement.get("required_fields", []):
+            normalized_field = normalize_label(str(field_name))
+            value = fields.get(normalized_field)
+            if value is None:
+                missing.append(f"field missing: {section_name}.{normalized_field}")
+            elif not has_real_field_value(value):
+                missing.append(f"field empty: {section_name}.{normalized_field}")
+    return missing
 
 
 def score_case(case: dict[str, Any], transcript_dir: Path) -> dict[str, Any]:
@@ -34,9 +121,14 @@ def score_case(case: dict[str, Any], transcript_dir: Path) -> dict[str, Any]:
     required = case.get("required_patterns", [])
     forbidden = case.get("forbidden_patterns", [])
 
-    missing = [pattern for pattern in required if not matches(pattern, transcript)]
-    forbidden_hits = [pattern for pattern in forbidden if matches(pattern, transcript)]
-    score = 0.0 if not required else 10.0 * (len(required) - len(missing)) / len(required)
+    missing = [pattern for pattern in required if not matches_required(pattern, transcript)]
+    missing.extend(check_required_sections(case, transcript))
+    forbidden_hits = [pattern for pattern in forbidden if matches_forbidden(pattern, transcript)]
+    required_count = len(required) + sum(
+        1 + len(requirement.get("required_fields", []))
+        for requirement in case.get("required_sections", [])
+    )
+    score = 0.0 if not required_count else 10.0 * (required_count - len(missing)) / required_count
 
     if not transcript:
         score = 0.0
