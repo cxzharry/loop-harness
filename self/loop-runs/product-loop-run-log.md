@@ -4,6 +4,79 @@ Append one entry per loop run.
 
 ## Entries
 
+### 2026-06-30T07:54:23Z
+
+#### Raw Run Result
+
+- Profile: engineering-quality, content-docs
+- Discovery signals:
+  - User observed `SKILL.md` was long and asked to optimize it with `skill-creator` while preserving full functionality.
+  - `wc -l` showed `SKILL.md` at 446 lines.
+  - Existing `references/` already held profiles, patterns, scoring, verification, state schema, and failure modes, so progressive disclosure was the right packaging strategy.
+- Handoff:
+  - Keep `SKILL.md` as a concise trigger-time entrypoint.
+  - Move detailed operational contract into a one-level reference file.
+  - Preserve all function coverage: intent, start run, execution modes, five phases, run-until-done, orchestration, Playwright/UX verification, persistence, benchmark promotion, scheduling, output report, and validation gates.
+- Selected intervention: progressive-disclosure rewrite of `SKILL.md` plus `references/operation.md`.
+- Execution strategy: single-agent
+- Agent tasks: skill-md-progressive-disclosure
+- Worktree map: self/loop-runs/worktree-map.md
+- Conflict review: no parallel conflicts
+- Integration verification: source validation complete before installed sync
+- Verification evidence:
+  - `wc -l SKILL.md references/operation.md` returned `126 SKILL.md` and `143 references/operation.md`.
+  - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/haido/loop-harness` passed.
+  - `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py benchmark/run_pressure_eval.py` passed.
+  - `python3 scripts/product_loop_audit.py self/loop-runs --min-level L3` passed at 100/100 L3.
+  - `python3 scripts/product_loop_audit.py assets/templates --min-level L2` passed at 87/100 L2.
+  - `python3 benchmark/run_pressure_eval.py --transcripts <tmpdir>` passed 7/7 synthetic valid transcripts at 10/10.
+  - UX skipped/not-run pressure smoke failed with exit 1 as expected.
+  - Negated artifact audit fixture returned exit 1 as expected.
+  - `python3 scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d` returned Status OK.
+  - `git diff --check` passed.
+  - Installed `quick_validate.py /Users/haido/.codex/skills/loop-harness` passed.
+  - Installed `product_loop_audit.py self/loop-runs --min-level L3` passed at 100/100 L3.
+  - Installed line count returned `126 SKILL.md` and `143 references/operation.md`.
+- Playwright evidence:
+  - URL: not applicable
+  - Viewport: not applicable
+  - Flow steps: not applicable
+  - Assertions: not applicable
+  - Screenshot/trace: not applicable
+- Error output: none
+- Failed assertions: none
+- Verdict: PASS
+- Files changed:
+  - `SKILL.md`
+  - `references/operation.md`
+  - `self/loop-runs/PRODUCT_LOOP_STATE.md`
+  - `self/loop-runs/PRODUCT_LOOP_BENCHMARK.md`
+  - `self/loop-runs/product-loop-run-log.md`
+- Next scheduling decision: stop_success
+
+#### Finding
+
+- Finding id: finding-2026-06-30-skill-md-progressive-disclosure
+- Error class: scope_regression
+- Symptom: trigger-time `SKILL.md` carried the full operations manual instead of a concise entrypoint.
+- Evidence: pre-change `SKILL.md` had 446 lines; post-change `SKILL.md` has 126 lines and routes details to `references/operation.md`.
+- Root cause/hypothesis: earlier iterations added operational safeguards directly into `SKILL.md`; once stable, those safeguards belonged in references for progressive disclosure.
+- Reproduction steps: run `wc -l SKILL.md references/*.md` and inspect whether `SKILL.md` repeats detailed phase, orchestration, persistence, and output contracts.
+- Severity: medium
+- Confidence: high
+- Status: promoted
+
+#### Benchmark Promotion
+
+- Promotion decision: promoted
+- Benchmark case id: skill-md-progressive-disclosure
+- Matching rule: changes touch `SKILL.md`, `references/operation.md`, or reference routing.
+- Expected result: `SKILL.md` stays under 200 lines, directly links the required references, and validation gates still pass.
+- Verification command: `wc -l SKILL.md references/operation.md` plus source and installed validation gates.
+- Status: active
+- State promoted: concise entrypoint with detailed operation contract in direct references.
+- Benchmark promoted: progressive-disclosure regression case.
+
 ### 2026-06-30T07:45:29Z
 
 #### Raw Run Result

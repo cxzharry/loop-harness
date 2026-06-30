@@ -19,6 +19,19 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Screenshot/trace evidence: not applicable
 - Last verified: 2026-06-30T07:45:29Z
 
+### Progressive Disclosure Entrypoint
+
+- Surface/URL: `SKILL.md`, `references/operation.md`, `references/*.md`
+- Playwright steps: not applicable
+- Expected visible states: not applicable
+- Assertions:
+  - `SKILL.md` stays a concise entrypoint under 200 lines.
+  - Detailed loop contract lives in one-level reference files linked directly from `SKILL.md`.
+  - `references/operation.md` preserves intent, start run, execution modes, five phases, run-until-done, orchestration, benchmark promotion, and output report details.
+  - `quick_validate.py`, self-loop audit, template audit, and pressure eval smoke still pass after the split.
+- Screenshot/trace evidence: not applicable
+- Last verified: 2026-06-30T07:54:23Z
+
 ### Pressure Transcript Scoring
 
 - Surface/URL: `benchmark/`
@@ -58,6 +71,10 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Check: Product-loop audit hard misses must return non-zero exit codes, not only lower readiness levels in stdout.
 - Source run-log entry: 2026-06-30T07:45:29Z
 - Why it matters: automated gates and CI rely on exit codes; a hard miss with exit 0 lets regressions pass silently.
+
+- Check: `SKILL.md` must stay concise and route detailed behavior through direct one-level references.
+- Source run-log entry: 2026-06-30T07:54:23Z
+- Why it matters: loading the skill should preserve behavior without spending context on every detailed phase contract unless needed.
 
 ## Regression Cases
 
@@ -121,6 +138,21 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Last passed: 2026-06-30T07:45:29Z
 - Status: active
 
+## Regression Case: skill-md-progressive-disclosure
+
+- Source run-log entry: 2026-06-30T07:54:23Z
+- Error class: scope_regression
+- Surface/URL: `SKILL.md`, `references/operation.md`
+- Trigger condition: changes inline detailed phase, orchestration, verification, persistence, or output contracts back into `SKILL.md` instead of routing through references.
+- Playwright steps: not applicable
+- Expected result: `SKILL.md` remains under 200 lines, references are linked directly, and source plus installed validation gates pass.
+- Failure evidence: pre-optimization `SKILL.md` had 446 lines and duplicated details already suitable for progressive-disclosure references.
+- Matching rule: any change to `SKILL.md`, `references/operation.md`, or reference routing.
+- Owner profile: engineering-quality, content-docs
+- Last failed: 2026-06-30T07:54:23Z pre-fix review
+- Last passed: 2026-06-30T07:54:23Z
+- Status: active
+
 ## Regression Case: sample-case-id
 
 - Source run-log entry:
@@ -162,3 +194,6 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 
 - Rule: Do not match `no` inside longer words such as `non-zero` when detecting negated evidence.
 - Evidence: `scripts/product_loop_audit.py`, `self/loop-runs/product-loop-run-log.md`
+
+- Rule: Keep `SKILL.md` as a concise entrypoint and move detailed operational contracts into directly linked reference files.
+- Evidence: `SKILL.md`, `references/operation.md`
