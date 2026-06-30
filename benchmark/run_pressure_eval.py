@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -144,11 +146,38 @@ def score_case(case: dict[str, Any], transcript_dir: Path) -> dict[str, Any]:
     }
 
 
+def run_agent_case(case: dict[str, Any], command: str, output_dir: Path) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    case_file = BENCHMARK_DIR / "cases" / f"{case['id']}.md"
+    transcript_path = output_dir / case["transcript"]
+    env = os.environ.copy()
+    env["LOOP_PRESSURE_CASE_ID"] = str(case["id"])
+    env["LOOP_PRESSURE_CASE_FILE"] = str(case_file)
+    env["LOOP_PRESSURE_SKILL_DIR"] = str(BENCHMARK_DIR.parent)
+    completed = subprocess.run(
+        command,
+        shell=True,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        env=env,
+        check=False,
+    )
+    transcript_path.write_text(completed.stdout, encoding="utf-8")
+    return transcript_path
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", default=str(BENCHMARK_DIR / "manifest.json"))
     parser.add_argument("--transcripts", default=str(BENCHMARK_DIR / "transcripts"))
     parser.add_argument("--case", action="append", dest="case_ids")
+    parser.add_argument(
+        "--agent-command",
+        help="Run this command once per selected case and score its captured transcript. "
+        "The command receives LOOP_PRESSURE_CASE_ID, LOOP_PRESSURE_CASE_FILE, and LOOP_PRESSURE_SKILL_DIR.",
+    )
+    parser.add_argument("--generated-transcripts", default=str(BENCHMARK_DIR / "transcripts" / "generated"))
     args = parser.parse_args()
 
     manifest = load_manifest(Path(args.manifest))
@@ -164,6 +193,13 @@ def main() -> int:
     if not results:
         print("No cases selected.")
         return 2
+
+    if args.agent_command:
+        generated_dir = Path(args.generated_transcripts)
+        for case in cases:
+            run_agent_case(case, args.agent_command, generated_dir)
+        transcript_dir = generated_dir
+        results = [score_case(case, transcript_dir) for case in cases]
 
     suite_pass = True
     total = 0.0

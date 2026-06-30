@@ -222,6 +222,119 @@
         "\\bwrite(s)? directly\\b[\\s\\S]{0,120}\\bpromoted/",
         "\\bpromote(s|d)?\\b[\\s\\S]{0,120}\\bwithout\\b[\\s\\S]{0,80}\\bevidence\\b"
       ]
+    },
+    {
+      "id": "scaffold_repo_init",
+      "critical": true,
+      "description": "New product repos must be scaffolded with canonical .loop-harness artifacts and audited.",
+      "transcript": "scaffold_repo_init.md",
+      "required_patterns": [
+        "\\binit_loop\\.py\\b",
+        "\\.loop-harness/",
+        "PRODUCT_LOOP\\.md",
+        "PRODUCT_LOOP_STATE\\.md",
+        "product-loop-run-log\\.md",
+        "PRODUCT_LOOP_BENCHMARK\\.md",
+        "product-loop-budget\\.md",
+        "AGENT_HANDOFF\\.md",
+        "worktree-map\\.md",
+        "agent-tasks/",
+        "schedules/",
+        "\\b--force\\b[\\s\\S]{0,120}\\bnot requested\\b|\\bkept\\b",
+        "product_loop_audit\\.py[\\s\\S]{0,80}--min-level L2"
+      ],
+      "forbidden_patterns": [
+        "\\boverwrite\\b[\\s\\S]{0,120}\\bwithout\\b[\\s\\S]{0,80}\\b--force\\b"
+      ]
+    },
+    {
+      "id": "benchmark_matching_engine",
+      "critical": true,
+      "description": "Active benchmarks must be selected by run intent and executed before optimization.",
+      "transcript": "benchmark_matching_engine.md",
+      "required_patterns": [
+        "\\bselect_benchmarks\\.py\\b",
+        "\\bprofile\\b",
+        "\\bintent\\b",
+        "\\bsurface\\b",
+        "\\bmetric\\b",
+        "\\bfiles\\b|\\bchanged files\\b",
+        "\\bowner profile\\b",
+        "\\bmatching rule\\b",
+        "\\.loop-harness/PRODUCT_LOOP_BENCHMARK\\.md",
+        "--include-skill",
+        "\\bbefore\\b[\\s\\S]{0,100}\\boptimization\\b",
+        "\\bblocks forward\\b|\\bblock forward\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bignored\\b[\\s\\S]{0,120}\\bactive benchmark\\b"
+      ]
+    },
+    {
+      "id": "run_controller_until_done",
+      "critical": true,
+      "description": "Actioning loops must use a state machine that runs until PASS or a recorded stop condition.",
+      "transcript": "run_controller_until_done.md",
+      "required_patterns": [
+        "\\brun_loop_controller\\.py\\b",
+        "\\brun-until-done\\b",
+        "\\bbenchmark command\\b",
+        "\\bbefore each\\b[\\s\\S]{0,80}\\biteration\\b",
+        "product-loop-run-log\\.md",
+        "\\bstop_success\\b",
+        "\\bplateau\\b",
+        "\\bregression\\b",
+        "\\bbudget\\b",
+        "\\bhuman_gate\\b",
+        "\\benv\\b",
+        "\\bunknown\\b"
+      ],
+      "forbidden_patterns": [
+        "\\baction-once\\b",
+        "\\bmax_iterations=3\\b[\\s\\S]{0,120}\\bdefault\\b"
+      ]
+    },
+    {
+      "id": "strict_run_log_validator",
+      "critical": true,
+      "description": "Latest run-log entry must have strict raw result, finding, and benchmark promotion fields.",
+      "transcript": "strict_run_log_validator.md",
+      "required_patterns": [
+        "\\bvalidate_run_log_entry\\.py\\b",
+        "product-loop-run-log\\.md",
+        "\\bRaw Run Result\\b",
+        "\\bFinding\\b",
+        "\\bBenchmark Promotion\\b",
+        "\\bplaceholder\\b[\\s\\S]{0,80}\\brejected\\b|\\breject\\b[\\s\\S]{0,80}\\bplaceholder\\b",
+        "\\bPromotion decision\\b[\\s\\S]{0,80}\\bpromoted\\b",
+        "\\bStatus\\b[\\s\\S]{0,80}\\bactive\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bPASS\\b[\\s\\S]{0,160}\\bplaceholder\\b"
+      ]
+    },
+    {
+      "id": "metrics_adapter_scheduler",
+      "critical": false,
+      "description": "Metric loops need objective metric adapter evidence and scheduler artifacts when scheduling is requested.",
+      "transcript": "metrics_adapter_scheduler.md",
+      "required_patterns": [
+        "\\bmetrics_adapter\\.py\\b",
+        "\\bmetric\\b",
+        "\\bsource\\b",
+        "\\bdirection\\b",
+        "\\baggregate\\b",
+        "\\btarget\\b",
+        "\\bvalue\\b",
+        "\\bverdict\\b",
+        "\\binstall_scheduler\\.py\\b",
+        "\\.loop-harness/schedules/",
+        "\\blaunchd\\b|\\bcron\\b",
+        "\\bscheduling decision\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bschedule\\b[\\s\\S]{0,120}\\bprose only\\b"
+      ]
     }
   ]
 }

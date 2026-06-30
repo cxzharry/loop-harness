@@ -38,15 +38,26 @@ Read `references/operation.md` before running a loop. Then load only the relevan
 2. Use `.loop-harness/` as the loop artifact root unless the user explicitly selects another folder.
 3. Load existing artifacts if present: `.loop-harness/PRODUCT_LOOP.md`, `.loop-harness/PRODUCT_LOOP_STATE.md`, `.loop-harness/product-loop-run-log.md`, `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`, and `.loop-harness/product-loop-budget.md`.
 4. Scaffold missing ongoing-loop artifacts into `.loop-harness/` from `assets/templates/` when needed.
+
+```bash
+python3 <skill-dir>/scripts/init_loop.py <product-repo-root>
+```
+
 5. Select profile(s), pattern, execution mode, target, safety budget, plateau patience, stop conditions, and human gates.
-6. Select matching local global knowledge when useful:
+6. Select matching active benchmark cases before actioning:
+
+```bash
+python3 <skill-dir>/scripts/select_benchmarks.py --repo <repo> --profile <profile> --intent <intent> --surface <surface> --include-skill --require
+```
+
+7. Select matching local global knowledge when useful:
 
 ```bash
 python3 <skill-dir>/scripts/select_knowledge.py --repo <repo> --profile <profile> --intent <intent> --surface <surface>
 ```
 
-7. Ask the user only for unresolved metric, target, surface, human-gate, or schedule decisions that cannot be safely inferred.
-8. Run artifact audit after scaffold/artifact changes:
+8. Ask the user only for unresolved metric, target, surface, human-gate, or schedule decisions that cannot be safely inferred.
+9. Run artifact audit after scaffold/artifact changes:
 
 ```bash
 python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-root-or-.loop-harness> --min-level L2
@@ -68,6 +79,12 @@ Before actioning, confirm or infer:
 - stop conditions;
 - human gates.
 
+For command-backed unattended loops, use the controller instead of a one-shot command:
+
+```bash
+python3 <skill-dir>/scripts/run_loop_controller.py --repo <repo> --benchmark-command "<benchmark-cmd>" --command "<action-or-verification-cmd>" --target-score <score>
+```
+
 ## Parallel Work
 
 Use a single agent unless domains are independent. If using parallel agents, record tasks in `.loop-harness/AGENT_HANDOFF.md` or `.loop-harness/agent-tasks/`, isolate file-changing work in worktrees when possible, write `.loop-harness/worktree-map.md`, review conflicts, and verify integrated work in the coordinator workspace before any `PASS`.
@@ -77,7 +94,14 @@ Use a single agent unless domains are independent. If using parallel agents, rec
 Always verify independently from the implementation story:
 - Run matching active benchmark cases first.
 - Run profile-specific tests, build, lint, metric, doc, browser, or Playwright checks.
+- For metric loops, use an objective source when available:
+
+```bash
+python3 <skill-dir>/scripts/metrics_adapter.py --source <json-csv-or-text> --metric <name> --target <number> --direction increase
+```
+
 - For browser-visible product work, record URL, viewport, flow steps, assertions, errors, and screenshots/traces when useful.
+- Use `assets/templates/playwright-loop-smoke.spec.ts` as the reusable Playwright smoke template when the repo has no stronger browser test.
 - For visual-quality work, record taste/slop score `>=8/10` and no critical slop violation, or record why the full taste rubric is not applicable and what equivalent checks were used.
 - If verification cannot run, use `UNKNOWN`, `ENV`, `ESCALATE_HUMAN`, or `NEEDS_INSTRUMENTATION`; do not mark `PASS`.
 
@@ -90,6 +114,11 @@ After every iteration:
 - Update `.loop-harness/AGENT_HANDOFF.md`, `.loop-harness/agent-tasks/`, and `.loop-harness/worktree-map.md` when agents/worktrees are used.
 - Record failed hypotheses and what not to retry.
 - If a finding may be reusable beyond the repo, gate it through `scripts/promote_global_knowledge.py`; do not write runtime learning into the skill package.
+- Validate the latest run-log entry before claiming persistence is complete:
+
+```bash
+python3 <skill-dir>/scripts/validate_run_log_entry.py <repo>/.loop-harness/product-loop-run-log.md
+```
 
 ## Scheduling
 
@@ -101,6 +130,12 @@ End each iteration with one next action:
 - `escalate`
 
 Use `.loop-harness/product-loop-budget.md` for max runs, max changes, subagent/tool-heavy check caps, token/time budget, and kill switch.
+
+When scheduling is requested, generate the local scheduler artifact under `.loop-harness/schedules/`:
+
+```bash
+python3 <skill-dir>/scripts/install_scheduler.py --repo <repo> --command "<loop command>" --cadence daily --kind launchd
+```
 
 ## Output Shape
 
@@ -124,6 +159,7 @@ After changing loop artifacts or this skill, run the relevant gates:
 ```bash
 python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-root-or-.loop-harness> --min-level L2
 python3 <skill-dir>/scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d
+python3 <skill-dir>/scripts/select_benchmarks.py --repo <product-repo-root> --profile ux-product --intent UX_OPTIMIZE --surface web-route --include-skill
 python3 <skill-dir>/scripts/select_knowledge.py --repo <product-repo-root> --profile ux-product --intent UX_OPTIMIZE --surface web-route
 python3 <skill-dir>/benchmark/run_pressure_eval.py --transcripts <skill-dir>/benchmark/fixtures/pass
 python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py <skill-dir>
