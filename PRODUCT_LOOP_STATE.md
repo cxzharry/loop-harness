@@ -4,7 +4,7 @@ Last run: 2026-06-30T04:53:51Z
 Intent: ENGINEERING_QUALITY
 Primary metric: pressure benchmark case score
 Baseline window: before `evals/` behavior benchmark scaffold
-Execution mode: action-once
+Execution mode: run-until-done
 Current iteration: 1
 Target: all critical pressure benchmark cases score `>=8/10`
 Latest verdict: PASS

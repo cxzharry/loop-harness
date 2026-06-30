@@ -6,7 +6,7 @@ Intent: ENGINEERING_QUALITY
 Pattern: daily-product-triage
 Profiles: engineering-quality, content-docs
 Readiness level: L2 assisted optimization
-Execution mode: action-once
+Execution mode: run-until-done
 Cadence: manual
 
 ## Scope

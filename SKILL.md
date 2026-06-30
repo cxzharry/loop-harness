@@ -31,7 +31,7 @@ State intent before choosing profiles or execution mode:
 - `POST_LAUNCH_LEARN`: learn from shipped behavior, support, feedback, metrics, and errors.
 
 Default intent:
-- If the user asks to "improve/optimize product" without a metric, use `UX_OPTIMIZE + ENGINEERING_QUALITY` in `report-only` or `action-once`.
+- If the user asks to "improve/optimize product" without a metric, use `UX_OPTIMIZE + ENGINEERING_QUALITY` in `run-until-done` when a target can be inferred; otherwise use `report-only` discovery to define the target.
 - If the user names conversion, activation, retention, funnel, revenue, experiment, or metric, use `METRIC_OPTIMIZE`; require a metric decision before `run-until-done`.
 - If metrics are desired but unavailable or untrusted, switch to `INSTRUMENT`.
 
@@ -66,9 +66,10 @@ Do not ask when a safe default exists. Instead, record the assumption in `PRODUC
 Choose one mode at the start of each run:
 
 - `report-only`: Discover, verify signals, persist state, and stop without source changes.
-- `action-once`: Execute one bounded intervention, verify it, persist outcome, then stop.
 - `run-until-done`: Repeat full five-phase iterations until a stop condition fires.
-- `scheduled`: Run on cadence; each tick may be report-only, action-once, or run-until-done within budget.
+- `scheduled`: Run on cadence; each tick may be report-only or run-until-done within budget.
+
+There is no `action-once` mode. Any loop that changes files, product behavior, docs, metrics, or release state must use `run-until-done`, even when it stops after the first successful iteration.
 
 `run-until-done` requires:
 - A measurable target or acceptance rubric.
@@ -76,7 +77,7 @@ Choose one mode at the start of each run:
 - `target_min` or minimum acceptable verification bar.
 - Stop conditions and human gates written to state before actioning.
 
-If these are missing, downgrade to `report-only` or ask for the missing decision.
+If these are missing, ask for the missing decision or infer a conservative default. If the missing decision cannot be resolved safely, downgrade to `report-only`; do not action work without a run-until-done target and stop conditions.
 
 For metric-based run-until-done, confirm:
 - Primary metric.
@@ -86,7 +87,7 @@ For metric-based run-until-done, confirm:
 
 ## Execution Orchestration
 
-For `action-once`, `run-until-done`, or actioning `scheduled` runs, decide whether work is sequential or parallel before editing files.
+For `run-until-done` or actioning `scheduled` runs, decide whether work is sequential or parallel before editing files.
 
 Use a single agent when findings are related, share state, require one mental model, or may conflict on the same files. Use parallel agents only when there are 2+ independent interventions, failures, surfaces, test files, or investigation domains that can be completed without shared mutable state.
 
