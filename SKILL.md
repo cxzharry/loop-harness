@@ -271,6 +271,12 @@ If verification requires launching or inspecting an app, use Playwright for real
 - Capture evidence: viewport, steps, assertions, errors, console/network failures when relevant, and screenshots or traces when useful.
 - If Playwright or the app server cannot run, verdict is `UNKNOWN` or `ENV`; do not mark `PASS` from static inspection alone.
 
+For UX/UI visual-quality work, Playwright is required but not sufficient when the surface can be opened. Combine it with:
+- `design-taste-frontend` for landing pages, portfolios, redesigns, onboarding, conversion-focused web surfaces, brief fit, hierarchy, composition, and taste scoring.
+- `design-slop-ban` for visible UI linting across websites, web apps, mobile UI, design systems, copy, heroes, motion, accessibility, responsive states, and generic AI-design failure modes.
+
+UX/UI visual-quality `PASS` requires taste/slop score `>=8/10` and no critical slop violation. If the full `design-taste-frontend` rubric does not fit the surface, record why and still apply `design-slop-ban` plus relevant hierarchy, copy, responsive, accessibility, and product-specificity checks.
+
 Rules:
 - The implementer cannot mark its own work done without evidence.
 - If verification cannot run, mark `ESCALATE_HUMAN` or `NEEDS_INSTRUMENTATION`.
@@ -338,6 +344,7 @@ End each run with:
 ### Verification
 <commands/checks/data sources, verdict>
 <Playwright URL, flow steps, assertions, screenshots/traces when app verification was needed>
+<UX/UI taste/slop benchmark score and critical slop verdict when visual quality matters>
 <parallel-agent conflict review and integrated verification when parallel execution was used>
 
 ### Persistence

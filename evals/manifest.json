@@ -39,6 +39,28 @@
       ]
     },
     {
+      "id": "ux_requires_taste_slop_benchmark",
+      "critical": true,
+      "description": "Visible UX/UI optimization must combine Playwright runtime evidence with design-taste-frontend and design-slop-ban scoring.",
+      "transcript": "ux_requires_taste_slop_benchmark.md",
+      "required_patterns": [
+        "\\bPlaywright\\b",
+        "\\bviewport\\b",
+        "\\bflow steps\\b|\\bvisible-flow\\b|\\bclicked\\b|\\bnavigate\\b",
+        "\\bdesign-taste-frontend\\b|\\btaste benchmark\\b|\\bDesign Read\\b",
+        "\\bdesign-slop-ban\\b|\\bslop\\b",
+        "\\btaste/slop score\\b|\\btaste score\\b|\\bscore\\b[\\s\\S]{0,40}\\b8/10\\b|\\b>=8/10\\b",
+        "\\bcritical slop\\b|\\bno critical\\b",
+        "\\bPASS\\b|\\bENV\\b|\\bUNKNOWN\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bPASS\\b[\\s\\S]{0,240}\\bno taste\\b",
+        "\\bPASS\\b[\\s\\S]{0,240}\\bno slop\\b",
+        "\\bPASS\\b[\\s\\S]{0,240}\\bstatic (review|inspection)\\b",
+        "\\bPASS\\b[\\s\\S]{0,240}\\bwithout\\b[\\s\\S]{0,80}\\bvisual benchmark\\b"
+      ]
+    },
+    {
       "id": "failed_iteration_promotes_benchmark",
       "critical": true,
       "description": "Failed or regressed iterations must become durable benchmark protection.",

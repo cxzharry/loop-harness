@@ -1,33 +1,33 @@
 # Product Loop State
 
-Last run: 2026-06-30T04:53:51Z
+Last run: 2026-06-30T05:20:25Z
 Intent: ENGINEERING_QUALITY
 Primary metric: pressure benchmark case score
 Baseline window: before `evals/` behavior benchmark scaffold
 Execution mode: run-until-done
-Current iteration: 1
+Current iteration: 2
 Target: all critical pressure benchmark cases score `>=8/10`
 Latest verdict: PASS
 Stop condition: SUCCESS
 
 ## Active Opportunity
 
-Add a reusable pressure-test benchmark suite so future loop-harness changes can be evaluated against real agent behavior transcripts, not only static artifact checks.
+Extend the pressure-test benchmark suite so UX/UI optimization cannot pass from browser smoke alone when visual quality matters.
 
-Handoff: single-agent implementation in isolated worktree `loop-harness-behavior-benchmarks`
-Verification: py_compile, product loop audit, pressure eval script smoke, skill quick_validate
-Persistence: root loop artifacts, benchmark cases, handoff, worktree map
-Scheduling: stop_success; run pressure eval manually when real transcripts exist
+Handoff: single-agent implementation in current coordinator workspace
+Verification: py_compile, product loop audit, pressure eval synthetic smoke, skill quick_validate
+Persistence: root loop artifacts, UX taste/slop benchmark case, verification reference, installed skill sync
+Scheduling: stop_success; use this benchmark in future UX/UI loop runs
 
 ## Execution Orchestration
 
 Execution strategy: single-agent
 Parallel domains: none for this intervention
-Agent task ids: self-behavior-benchmark-scaffold
-Worktree strategy: isolated git worktree under `.worktrees/loop-harness-behavior-benchmarks`
+Agent task ids: ux-taste-slop-benchmark
+Worktree strategy: current coordinator workspace; no parallel file-changing agents used
 Integration owner: coordinator
 Conflict review: no parallel agent conflicts
-Integrated verification: py_compile pass, root audit L3, template audit L2, quick_validate pass, cost smoke OK, pressure eval missing-transcript negative smoke FAIL as expected, synthetic positive smoke PASS 10/10
+Integrated verification: py_compile pass, root audit L3 100/100, template audit L2 87/100, cost smoke OK, pressure eval missing-transcript negative smoke FAIL as expected, synthetic positive smoke PASS 10/10 across 7 cases, source quick_validate pass, installed sync pass, installed quick_validate pass, installed audit L3 100/100
 
 ## Candidate Backlog
 
@@ -44,6 +44,7 @@ Integrated verification: py_compile pass, root audit L3, template audit L2, quic
 
 - Do not rely only on `product_loop_audit.py` for behavior quality.
 - Do not mark pressure behavior pass without transcript evidence.
+- Do not claim UX/UI visual-quality PASS from Playwright alone when visual quality matters.
 
 ## Active Benchmark Regressions
 
@@ -52,6 +53,7 @@ None.
 ## Iteration History
 
 - 2026-06-30T04:53:51Z: Added pressure benchmark manifest, six critical cases, transcript scorer, and self-loop artifacts; verified negative missing-transcript behavior and synthetic positive pass behavior.
+- 2026-06-30T05:20:25Z: Added combined `design-taste-frontend` and `design-slop-ban` UX/UI visual-quality benchmark gate; verified source and installed skill.
 
 ## Human Decisions
 
@@ -60,6 +62,7 @@ None.
 ## User Confirmations
 
 - Benchmark direction: pressure-test agent behavior thật.
+- UX/UI benchmark direction: combine `design-taste-frontend` and `design-slop-ban`.
 
 ## Data Gaps / Instrumentation Needs
 

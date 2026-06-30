@@ -34,6 +34,10 @@ Promote stable evidence from `product-loop-run-log.md` after each iteration.
 - Source run-log entry: 2026-06-30T04:53:51Z
 - Why it matters: these are the critical behavior failures that make loop-harness unsafe for autonomous optimization.
 
+- Check: UX/UI visual optimization must combine Playwright runtime evidence with `design-taste-frontend` and `design-slop-ban`; passing requires taste/slop score `>=8/10` and no critical slop violation.
+- Source run-log entry: 2026-06-30T05:20:25Z
+- Why it matters: browser smoke alone can miss generic, inaccessible, or visually regressed UI; the loop must block those regressions before optimizing forward.
+
 ## Regression Cases
 
 ## Regression Case: sample-case-id
@@ -62,3 +66,6 @@ Promote stable evidence from `product-loop-run-log.md` after each iteration.
 
 - Rule: Do not remove or weaken critical pressure benchmark cases without replacing them with equivalent behavior coverage.
 - Evidence: `evals/manifest.json`
+
+- Rule: Do not claim UX/UI visual-quality PASS from Playwright alone when visual quality matters; run the combined taste/slop benchmark or record a justified non-applicability reason with equivalent checks.
+- Evidence: `references/verification.md`, `evals/manifest.json`, `evals/cases/ux_requires_taste_slop_benchmark.md`

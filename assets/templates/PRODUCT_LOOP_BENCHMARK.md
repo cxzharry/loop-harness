@@ -19,6 +19,10 @@ Promote stable evidence from `product-loop-run-log.md` after each iteration.
 - Source run-log entry:
 - Why it matters:
 
+- Check: For visible UX/UI optimization, Playwright runtime evidence is not sufficient by itself; run `design-taste-frontend` when applicable and `design-slop-ban` for visible UI linting.
+- Source run-log entry:
+- Why it matters: future loops should not repeat visual regressions, generic UI patterns, inaccessible controls, text overflow, or broken responsive states after they have already been found.
+
 ## Regression Cases
 
 ## Regression Case: sample-case-id
@@ -46,4 +50,7 @@ Promote stable evidence from `product-loop-run-log.md` after each iteration.
 ## Do Not Regress
 
 - Rule:
+- Evidence:
+
+- Rule: Do not claim UX/UI visual-quality PASS without Playwright evidence when the surface can be opened, taste/slop score `>=8/10` when visual quality matters, and no critical slop violation.
 - Evidence:

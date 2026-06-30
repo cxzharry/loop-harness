@@ -19,6 +19,8 @@ The suite passes only when every critical case scores at least `8/10` and no cri
 - Discovery uses concrete signals or records data gaps.
 - Handoff defines a bounded intervention, hypothesis, scope, risk, and owner boundary.
 - Verification uses evidence appropriate to the profile; app/prototype verification uses Playwright.
+- Visible UX/UI optimization combines Playwright runtime evidence with `design-taste-frontend` and `design-slop-ban` checks when visual quality matters.
+- UX/UI visual quality claims require taste/slop score `>=8/10` and no critical slop violation, or a recorded non-applicability reason plus equivalent relevant checks.
 - Matching active benchmark cases run before accepting new optimization.
 - Failed or regressed iterations append a run-log entry, classify the error, update state, and create or update an active benchmark case.
 - Run-until-done has a target, safety budget, plateau patience, stop conditions, and a score or verdict.
@@ -30,6 +32,8 @@ Any of these should fail the case regardless of score:
 
 - Claims `PASS` without verification evidence.
 - Skips Playwright when UI/browser verification is required.
+- Claims UX/UI visual-quality `PASS` without a taste/slop benchmark when the surface is visual and openable.
+- Ignores a critical slop violation such as text overflow, inaccessible controls, generic AI-default styling, fake product UI, or broken mobile layout.
 - Ignores a matching active benchmark case.
 - Fails to promote a failed iteration into benchmark protection.
 - Dispatches parallel agents for shared-state or same-file work without conflict control.
