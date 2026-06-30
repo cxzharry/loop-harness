@@ -84,6 +84,37 @@ For metric-based run-until-done, confirm:
 - Target threshold.
 - Minimum sample/window or proxy evidence allowed before final judgment.
 
+## Execution Orchestration
+
+For `action-once`, `run-until-done`, or actioning `scheduled` runs, decide whether work is sequential or parallel before editing files.
+
+Use a single agent when findings are related, share state, require one mental model, or may conflict on the same files. Use parallel agents only when there are 2+ independent interventions, failures, surfaces, test files, or investigation domains that can be completed without shared mutable state.
+
+When dispatching parallel agents:
+1. Group work by independent domain.
+2. Create one focused task per domain with scope, goal, constraints, expected output, verification command, and files/surfaces allowed.
+3. Give each agent only the task-local context it needs; do not rely on conversation history.
+4. Record dispatched tasks in `AGENT_HANDOFF.md` or `agent-tasks/<task-id>.md`.
+5. Require each agent to return root cause or hypothesis, files changed, verification evidence, unresolved risks, and next handoff.
+6. Review every agent result for conflicts before integration.
+7. Run matching benchmark cases and the full relevant verification suite after integration.
+
+For file-changing parallel agents, use isolated workspaces:
+- Detect whether the current checkout is already a linked worktree before creating another one.
+- Treat git submodules as normal repos, not as worktrees.
+- Prefer native worktree tools when the environment provides them.
+- Fall back to `git worktree` only when no native tool exists.
+- Verify project-local `.worktrees/` or `worktrees/` is ignored before creating a worktree.
+- Write task-to-worktree mapping to `worktree-map.md`.
+- If worktree creation is blocked, record the blocker and run sequentially or in report-only mode.
+
+Parallel execution cannot mark the loop `PASS` until integration evidence exists:
+- agent summaries reviewed;
+- changed files conflict check completed;
+- matching active benchmark cases pass;
+- relevant tests/build/Playwright checks pass or a non-pass verdict is persisted;
+- state, run log, benchmark, handoff, and worktree map are updated.
+
 ## Run-Until-Done Controller
 
 In `run-until-done`, each iteration must execute all five phases. Do not loop only the implementation step.
@@ -98,9 +129,9 @@ Iteration loop:
 ```text
 for i in 1..max_iterations:
   Discovery: refresh state, benchmark cases, previous failures, and current product signals.
-  Handoff: choose or refine one bounded intervention and hypothesis.
+  Handoff: choose or refine one bounded intervention and hypothesis; decide single-agent vs parallel execution and worktree isolation.
   Verification: run matching benchmark cases, then profile-specific evidence checks after action.
-  Persistence: record verdict, evidence, scores, failed attempts, benchmark promotions, and what not to retry.
+  Persistence: record verdict, evidence, scores, failed attempts, benchmark promotions, agent handoffs, worktree mappings, and what not to retry.
   Scheduling: decide SUCCESS, NEXT_ITERATION, REPLAN, PAUSE, ESCALATE, or STOP.
 ```
 
@@ -213,6 +244,14 @@ Handoff must define owner boundary, files/surfaces, denylisted areas, acceptance
 
 Human approval is required for pricing, payments, auth, permissions, secrets, destructive migrations, irreversible data changes, legal/compliance, brand-sensitive copy, or major product direction.
 
+For actioning runs, handoff must also define:
+- Execution strategy: `single-agent`, `parallel-agents`, or `sequential-agents`.
+- Independence rationale when using parallel agents.
+- Agent task ids and owner domains.
+- Worktree strategy and task-to-worktree map when edits may conflict.
+- Integration owner and integration verification commands.
+- Conflict policy for agents editing the same file or surface.
+
 ## Phase 3: Verification
 
 Verify the intervention independently from the implementation story.
@@ -234,6 +273,7 @@ Rules:
 - The implementer cannot mark its own work done without evidence.
 - If verification cannot run, mark `ESCALATE_HUMAN` or `NEEDS_INSTRUMENTATION`.
 - Do not accept screenshots, test claims, or metric claims without source details.
+- For parallel-agent runs, do not accept agent summaries alone; verify integrated work in the coordinator workspace after reviewing conflicts.
 
 Verdicts:
 - `PASS`: evidence supports the hypothesis or the bounded acceptance criteria.
@@ -249,6 +289,8 @@ Update:
 - `PRODUCT_LOOP_STATE.md`: current opportunities, selected intervention, status, failed attempts, human decisions, next action.
 - `product-loop-run-log.md`: append-only run summary with timestamp, profile, signals, action, verification, verdict, next schedule decision.
 - `PRODUCT_LOOP_BENCHMARK.md`: promoted checks, known-good evidence, recurring smoke flows, and do-not-regress rules derived from run logs.
+- `AGENT_HANDOFF.md` or `agent-tasks/`: task scopes, assigned agents, constraints, outputs, integration decisions.
+- `worktree-map.md`: worktree paths, branches, task ids, status, verification, and cleanup/integration decision.
 
 After every iteration, persist before deciding the next loop action:
 1. Append the raw iteration result to `product-loop-run-log.md`.
@@ -256,6 +298,7 @@ After every iteration, persist before deciding the next loop action:
 3. Promote reusable verification into `PRODUCT_LOOP_BENCHMARK.md`: Playwright flows, commands, expected states, accepted baselines, regression checks.
 4. Keep transient noise only in the run log unless it recurs.
 5. For every failed or regressed iteration, add or update a regression case with error class, matching rule, expected result, last failed, and status.
+6. For parallel runs, update handoff and worktree map with agent result, conflict review, integration verdict, and cleanup decision.
 
 Persist failed hypotheses and what not to retry. Preserve useful learnings even when no code/docs change was made.
 
@@ -288,10 +331,12 @@ End each run with:
 
 ### Handoff
 <chosen intervention, hypothesis, scope, risk gate>
+<execution strategy, agent task ids, independence rationale, worktree strategy, integration owner>
 
 ### Verification
 <commands/checks/data sources, verdict>
 <Playwright URL, flow steps, assertions, screenshots/traces when app verification was needed>
+<parallel-agent conflict review and integrated verification when parallel execution was used>
 
 ### Persistence
 <run-log append, state promotions, benchmark promotions, or reason not updated>
@@ -303,6 +348,8 @@ Required after each iteration:
 - Benchmark cases matched before verification:
 - Benchmark verdict: `<PASS | FAIL | REGRESSION | UNKNOWN | not applicable>`
 - Benchmark regression case id created/updated:
+- Agent handoff files updated:
+- Worktree map updated:
 - Evidence retained for future regression checks:
 
 ### Scheduling

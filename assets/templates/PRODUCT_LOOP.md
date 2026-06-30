@@ -31,12 +31,23 @@ Playwright required for app verification: yes
 Playwright smoke flows:
 Test commands:
 
+## Execution Orchestration
+
+Execution strategy: single-agent
+Parallel agents allowed when domains are independent: yes
+Agent handoff file: AGENT_HANDOFF.md
+Agent task directory: agent-tasks/
+Worktree isolation for file-changing parallel agents: yes
+Worktree map: worktree-map.md
+Integration verification:
+Conflict policy:
+
 ## Five Phase Contract
 
 - Discovery: inspect real product signals before proposing work.
-- Handoff: choose one bounded intervention with hypothesis, scope, risk, and owner boundary.
-- Verification: accept only evidence-backed checks.
-- Persistence: update state and append the run log.
+- Handoff: choose one bounded intervention with hypothesis, scope, risk, owner boundary, execution strategy, and worktree plan.
+- Verification: accept only evidence-backed checks, including integrated verification after parallel agents.
+- Persistence: update state, append the run log, and update handoff/worktree files.
 - Scheduling: stop, run again, schedule, pause, or escalate.
 
 ## Budget

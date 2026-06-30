@@ -15,6 +15,8 @@ FILES = {
     "log": "product-loop-run-log.md",
     "benchmark": "PRODUCT_LOOP_BENCHMARK.md",
     "budget": "product-loop-budget.md",
+    "handoff": "AGENT_HANDOFF.md",
+    "worktree": "worktree-map.md",
 }
 
 PHASES = ["discovery", "handoff", "verification", "persistence", "scheduling"]
@@ -32,6 +34,16 @@ INTENT_FIELDS = ["intent", "primary metric", "baseline window", "user confirmati
 PLAYWRIGHT_FIELDS = ["playwright", "url", "viewport", "flow steps", "assertions"]
 PROMOTION_FIELDS = ["promotion", "state", "benchmark"]
 BENCHMARK_FIELDS = ["known-good flows", "regression checks", "do not regress"]
+ORCHESTRATION_FIELDS = [
+    "execution strategy",
+    "parallel agents",
+    "agent handoff",
+    "agent tasks",
+    "worktree isolation",
+    "worktree map",
+    "conflict review",
+    "integration verification",
+]
 REGRESSION_CASE_FIELDS = [
     "regression case",
     "error class",
@@ -52,6 +64,7 @@ STARTER_DIRS = [
     "assisted-l2-product-fix",
     "scheduled-l3-product-loop",
 ]
+OPTIONAL_FILES = {"handoff", "worktree"}
 PLACEHOLDER_CASE_IDS = {"sample-case-id", "<stable-id>", "stable-id", ""}
 
 
@@ -148,10 +161,16 @@ def main() -> int:
 
     for key, filename in FILES.items():
         if contents[key]:
-            score += 12
+            if key not in OPTIONAL_FILES:
+                score += 12
+            else:
+                score += 3
             findings.append(f"OK {filename} present")
         else:
-            findings.append(f"MISS {filename}")
+            if key in OPTIONAL_FILES:
+                findings.append(f"WARN {filename} not present; required when dispatching agents or worktrees")
+            else:
+                findings.append(f"MISS {filename}")
 
     combined = "\n".join(contents.values())
 
@@ -225,6 +244,14 @@ def main() -> int:
         findings.append(f"WARN benchmark fields incomplete: {', '.join(missing_benchmark_fields)}")
     else:
         findings.append("OK benchmark promotion fields present")
+
+    orchestration_hits = [field for field in ORCHESTRATION_FIELDS if field in combined]
+    score += len(orchestration_hits) * 2
+    missing_orchestration_fields = sorted(set(ORCHESTRATION_FIELDS) - set(orchestration_hits))
+    if missing_orchestration_fields:
+        findings.append(f"WARN execution orchestration fields incomplete: {', '.join(missing_orchestration_fields)}")
+    else:
+        findings.append("OK execution orchestration fields present")
 
     regression_case_hits = [field for field in REGRESSION_CASE_FIELDS if field in contents["benchmark"]]
     score += min(10, len(regression_case_hits))
@@ -306,6 +333,7 @@ def main() -> int:
         and not missing_playwright_fields
         and not missing_promotion_fields
         and not missing_benchmark_fields
+        and not missing_orchestration_fields
         and not missing_regression_case_fields
         and not missing_promoted_regression_cases
         and not missing_stop_conditions

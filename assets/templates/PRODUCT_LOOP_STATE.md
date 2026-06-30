@@ -19,6 +19,16 @@ Verification:
 Persistence:
 Scheduling:
 
+## Execution Orchestration
+
+Execution strategy:
+Parallel domains:
+Agent task ids:
+Worktree strategy:
+Integration owner:
+Conflict review:
+Integrated verification:
+
 ## Candidate Backlog
 
 ## Watch List

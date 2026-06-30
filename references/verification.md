@@ -9,6 +9,7 @@ Verification must be evidence-backed and profile-specific.
 - Metrics: query/source, time window, baseline, sample size caveat.
 - Docs/content: source-of-truth checked, link validation, generated mirrors.
 - Risk: touched files/surfaces and denylist confirmation.
+- Parallel execution: agent task ids, conflict review, integrated verification, worktree paths when used.
 
 ## Playwright Requirement For App Evaluation
 
@@ -44,6 +45,17 @@ Rules:
 - If any matching active case fails, verdict is `REGRESSION`.
 - Do not continue to unrelated optimization while a matching benchmark is red.
 - New failures must be classified and promoted into benchmark regression cases.
+
+## Parallel Agent Integration Checks
+
+When execution used multiple agents:
+- Confirm each task had a bounded scope, constraints, expected output, and verification command.
+- Review each agent summary and changed files before integration.
+- Check whether agents touched the same files, surfaces, fixtures, or state artifacts.
+- Run matching active benchmark cases after integration, not only in each agent workspace.
+- Run the relevant full verification suite in the coordinator workspace after integrating changes.
+- Persist conflict review, integrated verification, and worktree decisions in `AGENT_HANDOFF.md`, `worktree-map.md`, and `product-loop-run-log.md`.
+- If integrated verification cannot run, verdict is `UNKNOWN` or `ENV`, not `PASS`.
 
 ## Profile Checks
 

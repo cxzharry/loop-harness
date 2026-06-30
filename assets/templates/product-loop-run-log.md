@@ -10,6 +10,11 @@ Append one entry per loop run.
 - Discovery signals:
 - Handoff:
 - Selected intervention:
+- Execution strategy:
+- Agent tasks:
+- Worktree map:
+- Conflict review:
+- Integration verification:
 - Verification evidence:
 - Playwright evidence:
   - URL:

@@ -14,6 +14,8 @@ Purpose:
 - Human gates and denylist.
 - Verification commands and data sources.
 - Playwright command/route expectations when app verification is required.
+- Execution strategy: single-agent, sequential-agents, or parallel-agents.
+- Agent handoff and worktree-map pointers when actioning work may be split.
 - Budget and kill switch pointer.
 
 ## PRODUCT_LOOP_STATE.md
@@ -27,6 +29,7 @@ Required sections:
 - Watch list.
 - Failed attempts and do-not-retry notes.
 - Active benchmark regressions that currently block forward optimization.
+- Execution orchestration: parallel domains, agent task ids, worktree strategy, integration owner, conflict review, integrated verification.
 - Human decisions.
 - User confirmations.
 - Data gaps and instrumentation needs.
@@ -46,6 +49,7 @@ Append-only. Each entry includes:
 - Next scheduling decision.
 - Iteration state for run-until-done loops.
 - Promotion notes: what moved into state and benchmark.
+- Agent task ids, worktree map, conflict review, and integration verification when parallel agents are used.
 
 ## PRODUCT_LOOP_BENCHMARK.md
 
@@ -68,3 +72,26 @@ Required fields:
 - Token or time budget.
 - Kill switch.
 - Escalation owner or inbox.
+
+## AGENT_HANDOFF.md
+
+Required when a loop dispatches multiple agents or needs durable handoff across agents:
+- Run id and loop iteration.
+- Execution strategy.
+- Integration owner.
+- Shared constraints and denylist.
+- Benchmark cases that must pass before acceptance.
+- One task entry per agent with domain, scope, goal, allowed files/surfaces, forbidden files/surfaces, required context, verification command, expected output, worktree, and status.
+- Agent results: summary, root cause or hypothesis, files changed, verification evidence, risks, follow-up.
+- Integration record: conflict review, integrated files, integration verification, benchmark verdict, final decision.
+
+## worktree-map.md
+
+Required when a loop creates or reuses isolated worktrees:
+- Repo root.
+- Existing linked-worktree detection.
+- Submodule check.
+- Native worktree tool or git fallback used.
+- Project-local worktree ignore verification.
+- Task id to branch/path/agent/status/verification/integration decision mapping.
+- Cleanup decision for merged, removed, retained, or blocked worktrees.
