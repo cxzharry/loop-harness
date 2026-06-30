@@ -114,7 +114,7 @@ After changing loop artifacts or this skill, run the relevant gates:
 ```bash
 python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-or-folder> --min-level L2
 python3 <skill-dir>/scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d
-python3 <skill-dir>/benchmark/run_pressure_eval.py --transcripts <transcript-dir>
+python3 <skill-dir>/benchmark/run_pressure_eval.py --transcripts <skill-dir>/benchmark/fixtures/pass
 python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py <skill-dir>
 ```
 

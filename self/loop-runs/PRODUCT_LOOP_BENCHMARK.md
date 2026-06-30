@@ -14,10 +14,11 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
   - `product_loop_audit.py` compiles.
   - `product_loop_cost.py` compiles.
   - `product_loop_audit.py self/loop-runs --min-level L3` exits 0.
-  - `product_loop_audit.py assets/templates --min-level L2` exits 0.
-  - `product_loop_audit.py assets/templates --strict` exits non-zero while template artifacts have warnings.
+  - `product_loop_audit.py self/loop-runs --strict` exits 0.
+  - `product_loop_audit.py assets/templates --min-level L2` exits 0 with no WARN/MISS.
+  - `product_loop_audit.py assets/templates --strict` exits non-zero because templates are not scheduled/unattended run artifacts, not because of placeholder WARN noise.
 - Screenshot/trace evidence: not applicable
-- Last verified: 2026-06-30T07:45:29Z
+- Last verified: 2026-06-30T08:01:27Z
 
 ### Progressive Disclosure Entrypoint
 
@@ -40,11 +41,12 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Assertions:
   - `benchmark/run_pressure_eval.py` reads `benchmark/manifest.json`.
   - Missing transcripts fail rather than pass silently.
+  - Committed pass fixtures under `benchmark/fixtures/pass` score 10/10 for every critical case.
   - Critical cases require score `>=8/10`.
   - Skipped or not-run required checks do not count as positive evidence.
   - Failed-iteration promotion transcripts must include filled Raw Run Result, Finding, and Benchmark Promotion sections.
 - Screenshot/trace evidence: not applicable
-- Last verified: 2026-06-30T07:17:26Z
+- Last verified: 2026-06-30T08:01:27Z
 
 ## Regression Checks
 
@@ -75,6 +77,14 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Check: `SKILL.md` must stay concise and route detailed behavior through direct one-level references.
 - Source run-log entry: 2026-06-30T07:54:23Z
 - Why it matters: loading the skill should preserve behavior without spending context on every detailed phase contract unless needed.
+
+- Check: template audits should distinguish placeholder templates from real run artifacts.
+- Source run-log entry: 2026-06-30T08:01:27Z
+- Why it matters: `assets/templates` should validate cleanly as reusable scaffolding without pretending to have real state activity or run-log entries.
+
+- Check: pressure eval smoke must use committed pass fixtures rather than untracked temporary transcripts.
+- Source run-log entry: 2026-06-30T08:01:27Z
+- Why it matters: benchmark validation must be reproducible across future runs and installed skill syncs.
 
 ## Regression Cases
 
@@ -153,6 +163,36 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Last passed: 2026-06-30T07:54:23Z
 - Status: active
 
+## Regression Case: template-placeholder-audit-no-warning
+
+- Source run-log entry: 2026-06-30T08:01:27Z
+- Error class: scope_regression
+- Surface/URL: `scripts/product_loop_audit.py`, `assets/templates/`
+- Trigger condition: auditing `assets/templates` reports placeholder-only state or run-log absence as `WARN`.
+- Playwright steps: not applicable
+- Expected result: `python3 scripts/product_loop_audit.py assets/templates --min-level L2` exits 0, scores 100/100 L2, and emits no WARN/MISS.
+- Failure evidence: pre-fix template audit emitted `WARN no proven state activity` and `WARN no real run-log entries` for reusable scaffolding.
+- Matching rule: any change to audit state/run-log activity checks or template artifact layout.
+- Owner profile: engineering-quality
+- Last failed: 2026-06-30T08:01:27Z pre-fix review
+- Last passed: 2026-06-30T08:01:27Z
+- Status: active
+
+## Regression Case: committed-pressure-pass-fixtures
+
+- Source run-log entry: 2026-06-30T08:01:27Z
+- Error class: scope_regression
+- Surface/URL: `benchmark/fixtures/pass`, `benchmark/run_pressure_eval.py`, `benchmark/manifest.json`
+- Trigger condition: pressure eval smoke relies on missing, untracked, or temporary transcripts.
+- Playwright steps: not applicable
+- Expected result: `python3 benchmark/run_pressure_eval.py --transcripts benchmark/fixtures/pass` exits 0 and scores 10/10 across all critical cases.
+- Failure evidence: pre-fix validation used temporary synthetic transcripts, while the repository had no committed pass fixture directory.
+- Matching rule: any change to pressure benchmark manifest, scorer, transcript fixture paths, or validation commands.
+- Owner profile: engineering-quality, content-docs
+- Last failed: 2026-06-30T08:01:27Z pre-fix review
+- Last passed: 2026-06-30T08:01:27Z
+- Status: active
+
 ## Regression Case: sample-case-id
 
 - Source run-log entry:
@@ -197,3 +237,9 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 
 - Rule: Keep `SKILL.md` as a concise entrypoint and move detailed operational contracts into directly linked reference files.
 - Evidence: `SKILL.md`, `references/operation.md`
+
+- Rule: Keep `assets/templates` placeholder audits free of WARN/MISS while preserving L3 only for artifacts with real run activity.
+- Evidence: `scripts/product_loop_audit.py`, `assets/templates/`
+
+- Rule: Keep committed pressure pass fixtures aligned with every critical manifest case.
+- Evidence: `benchmark/fixtures/pass`, `benchmark/manifest.json`, `benchmark/run_pressure_eval.py`

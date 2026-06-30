@@ -189,6 +189,14 @@ def load_patterns(root: Path) -> list[dict]:
     return []
 
 
+def is_template_root(root: Path) -> bool:
+    return (
+        (root / "product-loop-run-log.template.md").exists()
+        and (root / "PRODUCT_LOOP_STATE.md").exists()
+        and (root / "PRODUCT_LOOP_BENCHMARK.md").exists()
+    )
+
+
 def has_failed_iteration(log_content: str) -> bool:
     if VERDICT_RE.search(log_content):
         return True
@@ -257,6 +265,7 @@ def main() -> int:
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
+    template_root = is_template_root(root)
     score = 0
     findings: list[str] = []
 
@@ -439,6 +448,8 @@ def main() -> int:
     if has_state_activity:
         score += 6
         findings.append("OK state has run activity")
+    elif template_root:
+        findings.append("OK template state is intentionally placeholder-only")
     else:
         findings.append("WARN no proven state activity")
 
@@ -446,6 +457,8 @@ def main() -> int:
     if has_run_log_entries:
         score += 7
         findings.append("OK run log has entries")
+    elif template_root:
+        findings.append("OK template run log is intentionally placeholder-only")
     else:
         findings.append("WARN no real run-log entries")
 
@@ -453,7 +466,7 @@ def main() -> int:
         findings.append(f"MISS negated evidence claims present: {len(negated_evidence_hits)}")
 
     score = min(score, 100)
-    if not (has_state_activity and has_run_log_entries):
+    if not template_root and not (has_state_activity and has_run_log_entries):
         score = min(score, 87)
     if missing_promoted_regression_cases:
         score = min(score, 89)

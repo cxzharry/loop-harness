@@ -4,6 +4,80 @@ Append one entry per loop run.
 
 ## Entries
 
+### 2026-06-30T08:01:27Z
+
+#### Raw Run Result
+
+- Profile: engineering-quality, content-docs
+- Discovery signals:
+  - User asked `$loop-harness` to fix `$loop-harness` until benchmarks are satisfied and no findings remain.
+  - `python3 scripts/product_loop_audit.py self/loop-runs --strict` already passed at 100/100 L3.
+  - `python3 scripts/product_loop_audit.py assets/templates --strict` failed because template placeholders emitted warning-level findings for no state activity and no run-log entries.
+  - `python3 benchmark/run_pressure_eval.py --transcripts benchmark/fixtures/pass` failed because no committed pass fixture directory existed.
+- Handoff:
+  - Keep self-run artifact gates strict.
+  - Treat `assets/templates` as reusable scaffolding rather than a real loop run.
+  - Add committed pass transcripts for every critical pressure case so benchmark smoke is reproducible.
+- Selected intervention: template-placeholder audit semantics plus committed pressure pass fixtures.
+- Execution strategy: single-agent
+- Agent tasks: audit-template-placeholder-no-warning, committed-pressure-pass-fixtures
+- Worktree map: self/loop-runs/worktree-map.md
+- Conflict review: no parallel conflicts
+- Integration verification: source validation complete before installed sync
+- Verification evidence:
+  - `python3 scripts/product_loop_audit.py self/loop-runs --strict` passed at 100/100 L3.
+  - `python3 scripts/product_loop_audit.py assets/templates --min-level L2` passed at 100/100 L2 and emitted no WARN/MISS.
+  - `python3 benchmark/run_pressure_eval.py --transcripts benchmark/fixtures/pass` passed 7/7 cases at 10/10.
+  - `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py benchmark/run_pressure_eval.py` passed.
+  - `python3 scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d` returned Status OK.
+  - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/haido/loop-harness` passed.
+  - `git diff --check` passed.
+- Playwright evidence:
+  - URL: not applicable
+  - Viewport: not applicable
+  - Flow steps: not applicable
+  - Assertions: not applicable
+  - Screenshot/trace: not applicable
+- Error output: pre-fix template audit emitted warning findings for expected placeholders; pressure smoke had no committed fixture transcripts.
+- Failed assertions: reusable templates should not emit warning findings for placeholder-only state/log; pressure smoke should run from committed fixtures.
+- Verdict: PASS
+- Files changed:
+  - `scripts/product_loop_audit.py`
+  - `benchmark/fixtures/pass/active_benchmark_blocks_forward.md`
+  - `benchmark/fixtures/pass/failed_iteration_promotes_benchmark.md`
+  - `benchmark/fixtures/pass/missing_metric_run_until_done.md`
+  - `benchmark/fixtures/pass/parallel_agents_independent.md`
+  - `benchmark/fixtures/pass/ui_requires_playwright.md`
+  - `benchmark/fixtures/pass/ux_requires_taste_slop_benchmark.md`
+  - `benchmark/fixtures/pass/worktree_isolation.md`
+  - `self/loop-runs/PRODUCT_LOOP_STATE.md`
+  - `self/loop-runs/PRODUCT_LOOP_BENCHMARK.md`
+  - `self/loop-runs/product-loop-run-log.md`
+- Next scheduling decision: stop_success
+
+#### Finding
+
+- Finding id: finding-2026-06-30-template-and-pressure-fixtures
+- Error class: scope_regression
+- Symptom: template audit produced warning findings for intentional placeholders, and pressure benchmark smoke depended on untracked temporary transcripts.
+- Evidence: pre-fix `assets/templates --strict` failed from placeholder warnings; pre-fix repository had no committed `benchmark/fixtures/pass` transcripts.
+- Root cause/hypothesis: audit did not distinguish template artifact roots from real loop-run roots, and earlier pressure smoke validation used generated tmpdir transcripts that were not retained.
+- Reproduction steps: run `python3 scripts/product_loop_audit.py assets/templates --min-level L2` and inspect warnings; run `python3 benchmark/run_pressure_eval.py --transcripts benchmark/fixtures/pass` before fixtures exist.
+- Severity: medium
+- Confidence: high
+- Status: promoted
+
+#### Benchmark Promotion
+
+- Promotion decision: promoted
+- Benchmark case id: template-placeholder-audit-no-warning, committed-pressure-pass-fixtures
+- Matching rule: changes touch `scripts/product_loop_audit.py`, `assets/templates/`, `benchmark/manifest.json`, `benchmark/run_pressure_eval.py`, or `benchmark/fixtures/pass`.
+- Expected result: template audits at L2 emit no WARN/MISS for placeholders; pressure pass fixtures score 10/10 across all critical cases.
+- Verification command: `python3 scripts/product_loop_audit.py assets/templates --min-level L2` and `python3 benchmark/run_pressure_eval.py --transcripts benchmark/fixtures/pass`
+- Status: active
+- State promoted: template-placeholder audit semantics and committed pass fixtures.
+- Benchmark promoted: two active regression cases for template warning noise and pressure fixture reproducibility.
+
 ### 2026-06-30T07:54:23Z
 
 #### Raw Run Result
