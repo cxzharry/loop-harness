@@ -1,0 +1,170 @@
+# Product Loop Run Log
+
+Append one entry per loop run.
+
+## Entries
+
+### 2026-06-30T05:29:01Z
+
+- Profile: engineering-quality, content-docs
+- Discovery signals:
+  - Package root mixed runtime skill files with self-run loop artifacts.
+  - User requested a dedicated `benchmark/` folder for eval/benchmark criteria such as UX/UI.
+  - Existing self-eval suite lived under `evals/`, which was less clear than `benchmark/`.
+- Handoff:
+  - Move skill behavior evals into `benchmark/`.
+  - Move self-run loop artifacts into `self/loop-runs/`.
+  - Keep target-repo scaffold templates in `assets/templates/`.
+  - Add a UX/UI criteria file under `benchmark/criteria/`.
+- Selected intervention: reorganize package layout, update path references, make benchmark runner cwd-independent, and teach the audit script to find templates from self-loop artifact folders.
+- Execution strategy: single-agent
+- Agent tasks: package-structure-benchmark-folder
+- Worktree map: self/loop-runs/worktree-map.md
+- Conflict review: no parallel conflicts
+- Integration verification: source and installed validation complete
+- Verification evidence:
+  - Package root file check: only `.gitignore` and `SKILL.md` remain at root.
+  - `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py benchmark/run_pressure_eval.py`
+  - `python3 scripts/product_loop_audit.py self/loop-runs` passed at 100/100 L3.
+  - `python3 scripts/product_loop_audit.py assets/templates` passed at 87/100 L2 with expected template warnings for no real run activity.
+  - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/haido/loop-harness` passed.
+  - `python3 benchmark/run_pressure_eval.py --transcripts <tmpdir>` passed 7/7 synthetic transcripts at 10/10.
+  - `python3 benchmark/run_pressure_eval.py` failed missing transcripts as expected.
+  - `python3 scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d` returned Status OK.
+  - `rsync -a --delete --exclude .git --exclude .worktrees --exclude __pycache__ /Users/haido/loop-harness/ /Users/haido/.codex/skills/loop-harness/`
+  - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/haido/.codex/skills/loop-harness` passed.
+  - `python3 /Users/haido/.codex/skills/loop-harness/scripts/product_loop_audit.py /Users/haido/.codex/skills/loop-harness/self/loop-runs` passed at 100/100 L3.
+  - Installed package root file check: only `.gitignore` and `SKILL.md` remain at installed root.
+- Playwright evidence:
+  - URL: not applicable
+  - Viewport: not applicable
+  - Flow steps: not applicable
+  - Assertions: not applicable
+  - Screenshot/trace: not applicable
+- Persistence:
+  - `evals/` moved to `benchmark/`.
+  - Root self-run artifacts moved to `self/loop-runs/`.
+  - `benchmark/criteria/ux-ui.md` added.
+  - `SKILL.md` updated with package layout boundaries.
+  - `benchmark/run_pressure_eval.py` now resolves default files relative to its own folder.
+  - `scripts/product_loop_audit.py` can audit self-loop artifacts while finding package templates in parent folders.
+- Promotion:
+  - State: package root must stay runtime-focused.
+  - Benchmark: benchmark criteria and pressure cases live under `benchmark/`; self-run logs/state live under `self/loop-runs/`.
+- Error classification: none
+- Benchmark regression case: none
+- Verdict: PASS
+- Files changed:
+  - `SKILL.md`
+  - `benchmark/`
+  - `scripts/product_loop_audit.py`
+  - `self/loop-runs/`
+- Next scheduling decision: stop_success
+
+### 2026-06-30T05:20:25Z
+
+- Profile: engineering-quality, ux-product
+- Discovery signals:
+  - `references/verification.md` required Playwright for app/prototype evaluation.
+  - Existing pressure cases covered Playwright but did not require a visual-quality benchmark.
+  - User requested combining `design-taste-frontend` and `design-slop-ban` for UX/UI benchmark coverage.
+- Handoff:
+  - Add a combined UX/UI taste/slop benchmark gate while preserving Playwright as required runtime evidence.
+  - Keep the change bounded to skill instructions, verification reference, pressure eval, benchmark artifacts, and templates.
+- Selected intervention: add UX taste/slop verification rules, a critical pressure eval case, a case fixture, rubric updates, benchmark rules, and entrypoint guidance.
+- Execution strategy: single-agent
+- Agent tasks: ux-taste-slop-benchmark
+- Worktree map: self/loop-runs/worktree-map.md
+- Conflict review: no parallel conflicts
+- Integration verification: source and installed validation complete
+- Verification evidence:
+  - `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py benchmark/run_pressure_eval.py`
+  - `python3 scripts/product_loop_audit.py self/loop-runs` passed at 100/100 L3.
+  - `python3 scripts/product_loop_audit.py assets/templates` passed at 87/100 L2 with expected template warnings for no real run activity.
+  - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/haido/loop-harness` passed.
+  - `python3 benchmark/run_pressure_eval.py --transcripts <tmpdir>` passed 7/7 synthetic transcripts at 10/10.
+  - `python3 benchmark/run_pressure_eval.py` failed missing transcripts as expected.
+  - `python3 scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d` returned Status OK.
+  - `rsync -a --delete --exclude .git --exclude .worktrees --exclude __pycache__ /Users/haido/loop-harness/ /Users/haido/.codex/skills/loop-harness/`
+  - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/haido/.codex/skills/loop-harness` passed.
+  - `python3 /Users/haido/.codex/skills/loop-harness/scripts/product_loop_audit.py /Users/haido/.codex/skills/loop-harness/self/loop-runs` passed at 100/100 L3.
+- Playwright evidence:
+  - URL: not applicable
+  - Viewport: not applicable
+  - Flow steps: not applicable
+  - Assertions: not applicable
+  - Screenshot/trace: not applicable
+- Persistence:
+  - `references/verification.md` updated with UX Taste And Slop Benchmark.
+  - `benchmark/manifest.json` updated with `ux_requires_taste_slop_benchmark`.
+  - `benchmark/cases/ux_requires_taste_slop_benchmark.md` added.
+  - `self/loop-runs/PRODUCT_LOOP_BENCHMARK.md` and template benchmark updated.
+  - `self/loop-runs/PRODUCT_LOOP_STATE.md` updated for iteration 2.
+- Promotion:
+  - State: UX/UI visual-quality PASS cannot rely on Playwright alone.
+  - Benchmark: active pressure case requires Playwright plus taste/slop score `>=8/10` and no critical slop violation.
+- Error classification: none
+- Benchmark regression case: none
+- Verdict: PASS
+- Files changed:
+  - `SKILL.md`
+  - `references/verification.md`
+  - `benchmark/manifest.json`
+  - `benchmark/cases/ux_requires_taste_slop_benchmark.md`
+  - `benchmark/rubric.md`
+  - `self/loop-runs/PRODUCT_LOOP_BENCHMARK.md`
+  - `self/loop-runs/PRODUCT_LOOP_STATE.md`
+  - `self/loop-runs/product-loop-run-log.md`
+  - `assets/templates/PRODUCT_LOOP_BENCHMARK.md`
+- Next scheduling decision: stop_success; apply the new UX taste/slop benchmark in future visual UI loop runs
+
+### 2026-06-30T04:53:51Z
+
+- Profile: engineering-quality, content-docs
+- Discovery signals:
+  - `loop-harness` had static audit and artifact checks.
+  - It lacked pressure-test behavior benchmark files for real agent transcripts.
+  - New execution orchestration contract needed benchmark cases for metric gate, Playwright gate, benchmark promotion, active benchmark blocking, parallel agents, and worktree isolation.
+- Handoff:
+  - Add `benchmark/` benchmark scaffold and self-loop artifacts under `self/loop-runs/`.
+  - Keep intervention bounded to eval/benchmark support.
+- Selected intervention: create pressure eval manifest, six critical cases, transcript scorer, and self-loop persistence files.
+- Execution strategy: single-agent
+- Agent tasks: self-behavior-benchmark-scaffold
+- Worktree map: self/loop-runs/worktree-map.md
+- Conflict review: no parallel conflicts
+- Integration verification: pending final coordinator validation after merge
+- Verification evidence:
+  - `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py benchmark/run_pressure_eval.py`
+  - `python3 scripts/product_loop_audit.py self/loop-runs`
+  - `python3 scripts/product_loop_audit.py assets/templates`
+  - `python3 scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d`
+  - `python3 benchmark/run_pressure_eval.py` failed missing transcripts as expected.
+  - `python3 benchmark/run_pressure_eval.py --transcripts <tmpdir>` passed synthetic complete transcripts at 10/10.
+  - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/haido/loop-harness`
+- Playwright evidence:
+  - URL: not applicable
+  - Viewport: not applicable
+  - Flow steps: not applicable
+  - Assertions: not applicable
+  - Screenshot/trace: not applicable
+- Persistence:
+  - Self-loop state added under `self/loop-runs/`.
+  - Pressure benchmark cases added.
+  - Handoff and worktree map added.
+- Promotion:
+  - State: behavior benchmark scaffold is the current active opportunity outcome.
+  - Benchmark: six critical pressure cases define future regression checks.
+- Error classification: none
+- Benchmark regression case: none
+- Verdict: PASS
+- Files changed:
+  - `benchmark/`
+  - `self/loop-runs/PRODUCT_LOOP.md`
+  - `self/loop-runs/PRODUCT_LOOP_STATE.md`
+  - `self/loop-runs/PRODUCT_LOOP_BENCHMARK.md`
+  - `self/loop-runs/product-loop-run-log.md`
+  - `self/loop-runs/product-loop-budget.md`
+  - `self/loop-runs/AGENT_HANDOFF.md`
+  - `self/loop-runs/worktree-map.md`
+- Next scheduling decision: stop_success after merge, installed sync, and final validation

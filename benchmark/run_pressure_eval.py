@@ -10,6 +10,9 @@ from pathlib import Path
 from typing import Any
 
 
+BENCHMARK_DIR = Path(__file__).resolve().parent
+
+
 def load_manifest(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -51,8 +54,8 @@ def score_case(case: dict[str, Any], transcript_dir: Path) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--manifest", default="evals/manifest.json")
-    parser.add_argument("--transcripts", default="evals/transcripts")
+    parser.add_argument("--manifest", default=str(BENCHMARK_DIR / "manifest.json"))
+    parser.add_argument("--transcripts", default=str(BENCHMARK_DIR / "transcripts"))
     parser.add_argument("--case", action="append", dest="case_ids")
     args = parser.parse_args()
 

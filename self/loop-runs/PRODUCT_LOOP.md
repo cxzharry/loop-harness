@@ -16,7 +16,7 @@ Watched surfaces:
 - `references/`
 - `scripts/`
 - `assets/templates/`
-- `evals/`
+- `benchmark/`
 
 Non-goals:
 - Run live subagents from the eval runner.
@@ -35,10 +35,10 @@ Denylist:
 ## Verification
 
 Primary checks:
-- `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py evals/run_pressure_eval.py`
-- `python3 scripts/product_loop_audit.py .`
+- `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py benchmark/run_pressure_eval.py`
+- `python3 scripts/product_loop_audit.py self/loop-runs`
 - `python3 scripts/product_loop_audit.py assets/templates`
-- `python3 evals/run_pressure_eval.py --transcripts <real-transcript-dir>`
+- `python3 benchmark/run_pressure_eval.py --transcripts <real-transcript-dir>`
 - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py <skill-dir>`
 
 Metric/data sources:
@@ -56,10 +56,10 @@ Test commands:
 
 Execution strategy: single-agent
 Parallel agents allowed when domains are independent: yes
-Agent handoff file: AGENT_HANDOFF.md
+Agent handoff file: self/loop-runs/AGENT_HANDOFF.md
 Agent task directory: agent-tasks/
 Worktree isolation for file-changing parallel agents: yes
-Worktree map: worktree-map.md
+Worktree map: self/loop-runs/worktree-map.md
 Integration verification: source validation, installed skill validation, audit script smoke, pressure eval script smoke
 Conflict policy: reject or replan if generated eval files overlap with runtime scripts in incompatible ways
 
@@ -73,12 +73,12 @@ Conflict policy: reject or replan if generated eval files overlap with runtime s
 
 ## Budget
 
-See `product-loop-budget.md`.
+See `self/loop-runs/product-loop-budget.md`.
 
 ## Run-Until-Done
 
 Primary metric: pressure benchmark case score
-Baseline window: current repository state before eval scaffold
+Baseline window: current repository state before benchmark scaffold
 Target: all critical pressure cases score `>=8/10`
 Target minimum: 8/10
 Iteration budget: until-done
@@ -87,4 +87,4 @@ Stop conditions: SUCCESS, EXHAUSTED, PLATEAU, REGRESSION, BUDGET, HUMAN_GATE, EN
 
 ## Kill Switch
 
-Pause when validation fails twice for the same root cause, scope expands beyond eval benchmark support, or installed skill sync diverges from source.
+Pause when validation fails twice for the same root cause, scope expands beyond benchmark support, or installed skill sync diverges from source.

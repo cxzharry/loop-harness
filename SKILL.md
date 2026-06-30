@@ -61,6 +61,18 @@ Do not ask when a safe default exists. Instead, record the assumption in `PRODUC
 8. Run `scripts/product_loop_audit.py <repo-or-folder>` when artifacts exist or after scaffolding.
 9. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
 
+## Skill Package Layout
+
+Keep runtime skill resources separate from skill self-evaluation artifacts:
+
+- `references/`: operational guidance loaded as needed while using the skill.
+- `scripts/`: deterministic helpers for auditing product-loop artifacts and cost.
+- `assets/templates/`: files copied or adapted into the target repo when scaffolding a loop.
+- `benchmark/`: evals, rubrics, criteria, and transcript scoring for validating `loop-harness` behavior itself.
+- `self/loop-runs/`: durable logs/state from using `loop-harness` to improve `loop-harness`.
+
+Do not treat files in `benchmark/` or `self/loop-runs/` as target-repo loop artifacts. Target-repo artifacts live in the product repo being optimized, usually scaffolded from `assets/templates/`.
+
 ## Execution Modes
 
 Choose one mode at the start of each run:
@@ -389,7 +401,7 @@ python3 <skill-dir>/scripts/product_loop_cost.py --pattern daily-product-triage 
 When validating loop-harness behavior against real pressure-test transcripts, run:
 
 ```bash
-python3 <skill-dir>/evals/run_pressure_eval.py --transcripts <transcript-dir>
+python3 <skill-dir>/benchmark/run_pressure_eval.py --transcripts <transcript-dir>
 ```
 
 For skill package validation, run:

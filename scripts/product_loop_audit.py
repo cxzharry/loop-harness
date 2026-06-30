@@ -83,10 +83,8 @@ def read(path: Path) -> str:
 
 
 def load_patterns(root: Path) -> list[dict]:
-    candidates = [
-        root / PATTERN_FILE,
-        root / "assets" / "templates" / PATTERN_FILE,
-    ]
+    candidates = [root / PATTERN_FILE, root / "assets" / "templates" / PATTERN_FILE]
+    candidates.extend(parent / "assets" / "templates" / PATTERN_FILE for parent in root.parents)
     for candidate in candidates:
         try:
             data = json.loads(candidate.read_text(encoding="utf-8"))
@@ -309,9 +307,11 @@ def main() -> int:
     else:
         findings.append("WARN no product-loop-patterns.json registry found")
 
+    starter_roots = [root, root / "assets" / "templates"]
+    starter_roots.extend(parent / "assets" / "templates" for parent in root.parents)
     starter_hits = [
         starter for starter in STARTER_DIRS
-        if (root / starter).is_dir() or (root / "assets" / "templates" / starter).is_dir()
+        if any((candidate_root / starter).is_dir() for candidate_root in starter_roots)
     ]
     score += min(6, len(starter_hits) * 2)
     if starter_hits:

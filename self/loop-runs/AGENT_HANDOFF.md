@@ -14,7 +14,7 @@ Use this file when a loop run dispatches multiple agents or needs durable handof
 - Denylist:
   - Secrets, credentials, destructive config changes.
 - Benchmark cases to run before acceptance:
-  - `python3 evals/run_pressure_eval.py` with real transcripts when available.
+  - `python3 benchmark/run_pressure_eval.py` with real transcripts when available.
   - Static validation commands for this scaffold.
 
 ## Tasks
@@ -23,14 +23,14 @@ Use this file when a loop run dispatches multiple agents or needs durable handof
 
 - Agent: coordinator
 - Domain: loop-harness behavior benchmarks
-- Scope: `evals/` and root loop persistence artifacts
+- Scope: `benchmark/` and self-loop persistence artifacts under `self/loop-runs/`
 - Goal: add pressure-test benchmark scaffold for real agent behavior transcripts
 - Allowed files/surfaces:
-  - `evals/`
+  - `benchmark/`
   - `PRODUCT_LOOP*.md`
   - `product-loop-*.md`
-  - `AGENT_HANDOFF.md`
-  - `worktree-map.md`
+  - `self/loop-runs/AGENT_HANDOFF.md`
+  - `self/loop-runs/worktree-map.md`
 - Forbidden files/surfaces:
   - Global credentials
   - unrelated skills
@@ -40,8 +40,8 @@ Use this file when a loop run dispatches multiple agents or needs durable handof
   - `references/scoring.md`
   - `references/verification.md`
 - Verification command:
-  - `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py evals/run_pressure_eval.py`
-  - `python3 scripts/product_loop_audit.py .`
+  - `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py benchmark/run_pressure_eval.py`
+  - `python3 scripts/product_loop_audit.py self/loop-runs`
   - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/haido/loop-harness`
 - Expected output:
   - Behavior benchmark suite exists and can score real transcripts.
@@ -62,7 +62,7 @@ Use this file when a loop run dispatches multiple agents or needs durable handof
 ## Integration
 
 - Conflict review: no parallel conflicts
-- Integrated files: `evals/` and root loop artifacts pending merge to main
-- Integration verification: py_compile pass, root audit L3, template audit L2, quick_validate pass, cost smoke OK, pressure eval negative/positive smoke pass
+- Integrated files: `benchmark/` and self-loop artifacts under `self/loop-runs/` pending merge to main
+- Integration verification: py_compile pass, self-loop audit L3, template audit L2, quick_validate pass, cost smoke OK, pressure eval negative/positive smoke pass
 - Benchmark verdict: PASS for scaffold; real pressure cases require transcripts
 - Final decision: stop_success after validation

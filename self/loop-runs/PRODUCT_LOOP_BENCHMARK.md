@@ -1,6 +1,6 @@
 # Product Loop Benchmark
 
-Promote stable evidence from `product-loop-run-log.md` after each iteration.
+Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each iteration.
 
 ## Known-Good Flows
 
@@ -18,11 +18,11 @@ Promote stable evidence from `product-loop-run-log.md` after each iteration.
 
 ### Pressure Transcript Scoring
 
-- Surface/URL: `evals/`
+- Surface/URL: `benchmark/`
 - Playwright steps: not applicable
 - Expected visible states: not applicable
 - Assertions:
-  - `evals/run_pressure_eval.py` reads `evals/manifest.json`.
+  - `benchmark/run_pressure_eval.py` reads `benchmark/manifest.json`.
   - Missing transcripts fail rather than pass silently.
   - Critical cases require score `>=8/10`.
 - Screenshot/trace evidence: not applicable
@@ -37,6 +37,10 @@ Promote stable evidence from `product-loop-run-log.md` after each iteration.
 - Check: UX/UI visual optimization must combine Playwright runtime evidence with `design-taste-frontend` and `design-slop-ban`; passing requires taste/slop score `>=8/10` and no critical slop violation.
 - Source run-log entry: 2026-06-30T05:20:25Z
 - Why it matters: browser smoke alone can miss generic, inaccessible, or visually regressed UI; the loop must block those regressions before optimizing forward.
+
+- Check: Skill self-eval criteria live under `benchmark/`, and self-run loop artifacts live under `self/loop-runs/`; package root stays limited to runtime skill resources.
+- Source run-log entry: 2026-06-30T05:29:01Z
+- Why it matters: keeping benchmarks and logs separate prevents agents from confusing loop-harness self-development artifacts with target-repo loop artifacts.
 
 ## Regression Cases
 
@@ -58,14 +62,17 @@ Promote stable evidence from `product-loop-run-log.md` after each iteration.
 ## Metric Baselines
 
 - Metric: pressure benchmark case score
-- Baseline window: before `evals/` scaffold
+- Baseline window: before `benchmark/` scaffold
 - Baseline value: no behavior benchmark suite
 - Source: repository inspection
 
 ## Do Not Regress
 
 - Rule: Do not remove or weaken critical pressure benchmark cases without replacing them with equivalent behavior coverage.
-- Evidence: `evals/manifest.json`
+- Evidence: `benchmark/manifest.json`
 
 - Rule: Do not claim UX/UI visual-quality PASS from Playwright alone when visual quality matters; run the combined taste/slop benchmark or record a justified non-applicability reason with equivalent checks.
-- Evidence: `references/verification.md`, `evals/manifest.json`, `evals/cases/ux_requires_taste_slop_benchmark.md`
+- Evidence: `references/verification.md`, `benchmark/manifest.json`, `benchmark/cases/ux_requires_taste_slop_benchmark.md`
+
+- Rule: Do not place `PRODUCT_LOOP*.md`, `product-loop-*.md`, `AGENT_HANDOFF.md`, or `worktree-map.md` at the skill package root for self-development runs.
+- Evidence: `self/loop-runs/`, `benchmark/`, `SKILL.md`
