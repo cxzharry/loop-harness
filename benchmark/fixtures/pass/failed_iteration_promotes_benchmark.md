@@ -2,7 +2,7 @@
 
 Verdict: FAIL
 Error classification: runtime_error
-The failed iteration evidence is persisted in product-loop-run-log.md, then promoted into PRODUCT_LOOP_STATE.md and PRODUCT_LOOP_BENCHMARK.md as an active Regression Case with a matching rule.
+The failed iteration evidence is persisted in .loop-harness/product-loop-run-log.md, then promoted into .loop-harness/PRODUCT_LOOP_STATE.md and .loop-harness/PRODUCT_LOOP_BENCHMARK.md as an active Regression Case with a matching rule.
 
 ## Raw Run Result
 

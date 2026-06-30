@@ -86,6 +86,10 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Source run-log entry: 2026-06-30T08:01:27Z
 - Why it matters: benchmark validation must be reproducible across future runs and installed skill syncs.
 
+- Check: target-repo loop artifacts must live under `.loop-harness/` and audit must auto-detect that folder from repo root.
+- Source run-log entry: 2026-06-30T08:50:55Z
+- Why it matters: product repos should not be polluted with loose loop artifact files, and users should not need to remember the artifact subfolder path for audit.
+
 ## Regression Cases
 
 ## Regression Case: ux-skipped-taste-slop-must-fail
@@ -193,6 +197,21 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Last passed: 2026-06-30T08:01:27Z
 - Status: active
 
+## Regression Case: default-loop-artifact-root
+
+- Source run-log entry: 2026-06-30T08:50:55Z
+- Error class: scope_regression
+- Surface/URL: `SKILL.md`, `references/operation.md`, `references/state-schema.md`, `references/verification.md`, `scripts/product_loop_audit.py`, `benchmark/manifest.json`
+- Trigger condition: target-repo loop artifacts are documented, scaffolded, audited, or pressure-tested as loose root files instead of `.loop-harness/` files.
+- Playwright steps: not applicable
+- Expected result: target repos use `.loop-harness/` by default; `python3 scripts/product_loop_audit.py <repo-root> --min-level L2` auto-detects `<repo-root>/.loop-harness`; pressure fixtures require `.loop-harness/` persistence, handoff, agent-task, and worktree-map paths.
+- Failure evidence: pre-fix repo-root audit returned `0/100 L0` for a temp repo with valid `.loop-harness/` artifacts; pressure fixtures mentioned artifact filenames without the `.loop-harness/` root.
+- Matching rule: any change to artifact path conventions, scaffold instructions, audit root resolution, pressure persistence cases, handoff paths, or worktree-map paths.
+- Owner profile: engineering-quality, content-docs
+- Last failed: 2026-06-30T08:50:55Z pre-fix review
+- Last passed: 2026-06-30T08:50:55Z
+- Status: active
+
 ## Regression Case: sample-case-id
 
 - Source run-log entry:
@@ -243,3 +262,9 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 
 - Rule: Keep committed pressure pass fixtures aligned with every critical manifest case.
 - Evidence: `benchmark/fixtures/pass`, `benchmark/manifest.json`, `benchmark/run_pressure_eval.py`
+
+- Rule: Target repos use `.loop-harness/` as the default loop artifact root; do not scatter loop artifacts at repo root.
+- Evidence: `SKILL.md`, `references/state-schema.md`, `references/operation.md`
+
+- Rule: Audit accepts either `.loop-harness/` directly or the repo root containing `.loop-harness/`.
+- Evidence: `scripts/product_loop_audit.py`

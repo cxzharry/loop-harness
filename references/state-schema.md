@@ -2,6 +2,24 @@
 
 Use these artifacts for persistent product optimization loops.
 
+## Artifact Root
+
+In target repos, put loop artifacts in `.loop-harness/` by default:
+
+```text
+.loop-harness/
+  PRODUCT_LOOP.md
+  PRODUCT_LOOP_STATE.md
+  product-loop-run-log.md
+  PRODUCT_LOOP_BENCHMARK.md
+  product-loop-budget.md
+  AGENT_HANDOFF.md
+  worktree-map.md
+  agent-tasks/
+```
+
+Use another folder only when the user explicitly requests it or the repo already has an established loop artifact root. The loop-harness skill's own self-development artifacts use `self/loop-runs/` as an internal exception.
+
 ## PRODUCT_LOOP.md
 
 Purpose:

@@ -18,6 +18,7 @@ Run controlled product optimization loops with evidence. Use this skill to impro
 - Do not create separate `error-log.md`, `findings.md`, or `run-log-error.md`.
 - Run matching active benchmark cases before accepting new optimization.
 - Persist state before scheduling the next iteration.
+- In target repos, store persistent loop artifacts under `.loop-harness/` by default; do not scatter them across the repo root.
 
 ## First Load
 
@@ -33,14 +34,15 @@ Read `references/operation.md` before running a loop. Then load only the relevan
 ## Start Checklist
 
 1. State the detected intent and product surface in one line.
-2. Load existing artifacts if present: `PRODUCT_LOOP.md`, `PRODUCT_LOOP_STATE.md`, `product-loop-run-log.md`, `PRODUCT_LOOP_BENCHMARK.md`, and `product-loop-budget.md`.
-3. Scaffold missing ongoing-loop artifacts from `assets/templates/` when needed.
-4. Select profile(s), pattern, execution mode, target, safety budget, plateau patience, stop conditions, and human gates.
-5. Ask the user only for unresolved metric, target, surface, human-gate, or schedule decisions that cannot be safely inferred.
-6. Run artifact audit after scaffold/artifact changes:
+2. Use `.loop-harness/` as the loop artifact root unless the user explicitly selects another folder.
+3. Load existing artifacts if present: `.loop-harness/PRODUCT_LOOP.md`, `.loop-harness/PRODUCT_LOOP_STATE.md`, `.loop-harness/product-loop-run-log.md`, `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`, and `.loop-harness/product-loop-budget.md`.
+4. Scaffold missing ongoing-loop artifacts into `.loop-harness/` from `assets/templates/` when needed.
+5. Select profile(s), pattern, execution mode, target, safety budget, plateau patience, stop conditions, and human gates.
+6. Ask the user only for unresolved metric, target, surface, human-gate, or schedule decisions that cannot be safely inferred.
+7. Run artifact audit after scaffold/artifact changes:
 
 ```bash
-python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-or-folder> --min-level L2
+python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-root-or-.loop-harness> --min-level L2
 ```
 
 Use `--min-level L3` for scheduled/unattended loops. Use `--strict` for CI or release gates. Hard misses such as negated evidence or missing promoted active regression cases must exit non-zero.
@@ -61,7 +63,7 @@ Before actioning, confirm or infer:
 
 ## Parallel Work
 
-Use a single agent unless domains are independent. If using parallel agents, record tasks in `AGENT_HANDOFF.md` or `agent-tasks/`, isolate file-changing work in worktrees when possible, write `worktree-map.md`, review conflicts, and verify integrated work in the coordinator workspace before any `PASS`.
+Use a single agent unless domains are independent. If using parallel agents, record tasks in `.loop-harness/AGENT_HANDOFF.md` or `.loop-harness/agent-tasks/`, isolate file-changing work in worktrees when possible, write `.loop-harness/worktree-map.md`, review conflicts, and verify integrated work in the coordinator workspace before any `PASS`.
 
 ## Verification Gates
 
@@ -76,9 +78,9 @@ Always verify independently from the implementation story:
 
 After every iteration:
 - Append one run-log entry with `Raw Run Result`, `Finding`, and `Benchmark Promotion` blocks.
-- Promote durable state to `PRODUCT_LOOP_STATE.md`.
-- Promote reusable checks or failures to `PRODUCT_LOOP_BENCHMARK.md`.
-- Update `AGENT_HANDOFF.md`, `agent-tasks/`, and `worktree-map.md` when agents/worktrees are used.
+- Promote durable state to `.loop-harness/PRODUCT_LOOP_STATE.md`.
+- Promote reusable checks or failures to `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`.
+- Update `.loop-harness/AGENT_HANDOFF.md`, `.loop-harness/agent-tasks/`, and `.loop-harness/worktree-map.md` when agents/worktrees are used.
 - Record failed hypotheses and what not to retry.
 
 ## Scheduling
@@ -90,7 +92,7 @@ End each iteration with one next action:
 - `pause`
 - `escalate`
 
-Use `product-loop-budget.md` for max runs, max changes, subagent/tool-heavy check caps, token/time budget, and kill switch.
+Use `.loop-harness/product-loop-budget.md` for max runs, max changes, subagent/tool-heavy check caps, token/time budget, and kill switch.
 
 ## Output Shape
 
@@ -112,7 +114,7 @@ Include run-log timestamp, state fields promoted, error classification, matched 
 After changing loop artifacts or this skill, run the relevant gates:
 
 ```bash
-python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-or-folder> --min-level L2
+python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-root-or-.loop-harness> --min-level L2
 python3 <skill-dir>/scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d
 python3 <skill-dir>/benchmark/run_pressure_eval.py --transcripts <skill-dir>/benchmark/fixtures/pass
 python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py <skill-dir>

@@ -17,7 +17,7 @@ The repo is a normal git checkout. Parallel agents will edit files.
 - Prefer native worktree tooling if available.
 - Fall back to `git worktree` only when no native worktree tool exists.
 - Verify project-local `.worktrees/` or `worktrees/` is ignored before creating worktrees.
-- Record task-to-worktree mapping in `worktree-map.md`.
+- Record task-to-worktree mapping in `.loop-harness/worktree-map.md`.
 - If worktree creation fails, persist the blocker and run sequentially or report-only.
 
 ## Critical Failures

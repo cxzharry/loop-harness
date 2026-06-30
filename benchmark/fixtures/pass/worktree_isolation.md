@@ -6,6 +6,5 @@ File-changing parallel work used worktree isolation.
 - Submodule guard: inspected submodule status before treating git common-dir differences as isolation.
 - Native worktree: preferred native worktree tooling; git worktree fallback is allowed when native tooling is unavailable.
 - Ignore verification: ran `git check-ignore .worktrees/` before creating project-local worktrees.
-- Mapping: worktree-map.md records task id, branch, path, status, verification command, and integration decision.
+- Mapping: .loop-harness/worktree-map.md records task id, branch, path, status, verification command, and integration decision.
 - Blocker handling: if worktree setup is blocked, persist the blocker and switch to sequential or report-only execution.
-

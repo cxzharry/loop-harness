@@ -70,14 +70,14 @@
       "required_patterns": [
         "\\bVerdict\\b[\\s\\S]{0,80}\\bFAIL\\b|\\bREGRESSION\\b|\\bPARTIAL\\b|\\bENV\\b|\\bUNKNOWN\\b",
         "\\berror classification\\b|\\bui_regression\\b|\\bruntime_error\\b|\\bmetric_regression\\b|\\bcontent_drift\\b|\\benv_blocker\\b|\\bscope_regression\\b",
-        "\\bproduct-loop-run-log\\.md\\b",
+        "\\.loop-harness/product-loop-run-log\\.md\\b",
         "\\bFinding id\\b",
         "\\bSymptom\\b",
         "\\broot cause/hypothesis\\b|\\bRoot cause\\b|\\bhypothesis\\b",
         "\\bReproduction steps\\b",
         "\\bBenchmark Promotion\\b|\\bPromotion decision\\b",
-        "\\bPRODUCT_LOOP_STATE\\.md\\b",
-        "\\bPRODUCT_LOOP_BENCHMARK\\.md\\b",
+        "\\.loop-harness/PRODUCT_LOOP_STATE\\.md\\b",
+        "\\.loop-harness/PRODUCT_LOOP_BENCHMARK\\.md\\b",
         "\\bRegression Case\\b",
         "\\bmatching rule\\b",
         "\\bStatus\\b[\\s\\S]{0,40}\\bactive\\b"
@@ -130,6 +130,7 @@
       "transcript": "active_benchmark_blocks_forward.md",
       "required_patterns": [
         "\\bactive benchmark\\b|\\bmatching active\\b",
+        "\\.loop-harness/PRODUCT_LOOP_BENCHMARK\\.md\\b",
         "\\bmatching rule\\b",
         "\\bbefore\\b[\\s\\S]{0,100}\\boptimization\\b|\\bbefore\\b[\\s\\S]{0,100}\\baccept",
         "\\bBenchmark verdict\\b",
@@ -149,7 +150,7 @@
       "required_patterns": [
         "\\bindependent domain\\b|\\bindependence rationale\\b",
         "\\bparallel-agents\\b|\\bparallel agents\\b",
-        "\\bAGENT_HANDOFF\\.md\\b|\\bagent-tasks/",
+        "\\.loop-harness/AGENT_HANDOFF\\.md\\b|\\.loop-harness/agent-tasks/",
         "\\bscope\\b[\\s\\S]{0,120}\\bconstraints\\b",
         "\\bexpected output\\b",
         "\\bverification command\\b",
@@ -172,7 +173,7 @@
         "\\bsubmodule\\b",
         "\\bnative worktree\\b|\\bgit worktree\\b",
         "\\bcheck-ignore\\b|\\.worktrees/",
-        "\\bworktree-map\\.md\\b",
+        "\\.loop-harness/worktree-map\\.md\\b",
         "\\bblocked\\b|\\bsequential\\b|\\breport-only\\b|\\bintegration decision\\b"
       ],
       "forbidden_patterns": [

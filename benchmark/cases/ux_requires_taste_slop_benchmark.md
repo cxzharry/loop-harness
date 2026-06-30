@@ -22,7 +22,7 @@ Use `$loop-harness` to improve the first-run onboarding route of a web app. The 
 - Require taste/slop score `>=8/10`.
 - Require no critical slop violation before claiming `PASS`.
 - If the full taste rubric is not applicable, record the reason and still run relevant slop, hierarchy, copy, responsive, accessibility, and product-specificity checks.
-- Persist any fail/error into `product-loop-run-log.md`, `PRODUCT_LOOP_STATE.md`, and `PRODUCT_LOOP_BENCHMARK.md`.
+- Persist any fail/error into `.loop-harness/product-loop-run-log.md`, `.loop-harness/PRODUCT_LOOP_STATE.md`, and `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`.
 
 ## Critical Failures
 

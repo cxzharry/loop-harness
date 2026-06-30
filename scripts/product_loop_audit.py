@@ -77,6 +77,7 @@ REGRESSION_CASE_FIELDS = [
 FAILURE_VERDICTS = ["fail", "regression", "partial", "env", "unknown"]
 STOP_CONDITIONS = ["success", "exhausted", "plateau", "regression", "budget", "human_gate", "env", "unknown"]
 PATTERN_FILE = "product-loop-patterns.json"
+DEFAULT_ARTIFACT_DIR = ".loop-harness"
 STARTER_DIRS = [
     "minimal-l1-report-only",
     "assisted-l2-product-fix",
@@ -131,6 +132,19 @@ def read_artifact(root: Path, key: str, filename: str) -> str:
         if content:
             return content
     return ""
+
+
+def has_required_artifacts(root: Path) -> bool:
+    return all((root / filename).exists() for key, filename in FILES.items() if key not in OPTIONAL_FILES)
+
+
+def resolve_artifact_root(root: Path) -> Path:
+    if has_required_artifacts(root) or is_template_root(root):
+        return root
+    nested = root / DEFAULT_ARTIFACT_DIR
+    if has_required_artifacts(nested) or is_template_root(nested):
+        return nested
+    return root
 
 
 def has_positive_field(content: str, field: str) -> bool:
@@ -195,6 +209,10 @@ def is_template_root(root: Path) -> bool:
         and (root / "PRODUCT_LOOP_STATE.md").exists()
         and (root / "PRODUCT_LOOP_BENCHMARK.md").exists()
     )
+
+
+def is_loop_instance_root(root: Path) -> bool:
+    return has_required_artifacts(root) and not is_template_root(root)
 
 
 def has_failed_iteration(log_content: str) -> bool:
@@ -264,8 +282,10 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    root = Path(args.root).resolve()
+    input_root = Path(args.root).resolve()
+    root = resolve_artifact_root(input_root)
     template_root = is_template_root(root)
+    loop_instance_root = is_loop_instance_root(root)
     score = 0
     findings: list[str] = []
 
@@ -438,27 +458,35 @@ def main() -> int:
         starter for starter in STARTER_DIRS
         if any((candidate_root / starter).is_dir() for candidate_root in starter_roots)
     ]
-    score += min(6, len(starter_hits) * 2)
+    if loop_instance_root and not starter_hits:
+        findings.append("OK starter mode templates not required for loop instance")
+    else:
+        score += min(6, len(starter_hits) * 2)
     if starter_hits:
         findings.append(f"OK starter modes: {', '.join(starter_hits)}")
-    else:
+    elif not loop_instance_root:
         findings.append("WARN no L1/L2/L3 starter mode templates found")
 
     has_state_activity = "last run: never" not in contents["state"] and "last run:" in contents["state"]
+    has_run_log_entries = bool(RUN_LOG_ENTRY_RE.search(contents["log"]))
+    initial_loop_instance = loop_instance_root and not has_state_activity and not has_run_log_entries
     if has_state_activity:
         score += 6
         findings.append("OK state has run activity")
     elif template_root:
         findings.append("OK template state is intentionally placeholder-only")
+    elif initial_loop_instance:
+        findings.append("OK initial loop state is intentionally placeholder-only")
     else:
         findings.append("WARN no proven state activity")
 
-    has_run_log_entries = bool(RUN_LOG_ENTRY_RE.search(contents["log"]))
     if has_run_log_entries:
         score += 7
         findings.append("OK run log has entries")
     elif template_root:
         findings.append("OK template run log is intentionally placeholder-only")
+    elif initial_loop_instance:
+        findings.append("OK initial loop run log is intentionally placeholder-only")
     else:
         findings.append("WARN no real run-log entries")
 

@@ -1,33 +1,33 @@
 # Product Loop State
 
-Last run: 2026-06-30T08:01:27Z
+Last run: 2026-06-30T08:50:55Z
 Intent: ENGINEERING_QUALITY
 Primary metric: pressure benchmark case score
 Baseline window: before `benchmark/` behavior benchmark scaffold
 Execution mode: run-until-done
-Current iteration: 8
+Current iteration: 9
 Target: all critical pressure benchmark cases score `>=8/10`
 Latest verdict: PASS
 Stop condition: SUCCESS
 
 ## Active Opportunity
 
-Remove remaining confusing audit/benchmark findings from loop-harness self-validation without weakening benchmark gates.
+Standardize target-repo loop artifacts under `.loop-harness/` while preserving audit compatibility with repo-root commands.
 
 Handoff: single-agent implementation in current coordinator workspace
-Verification: committed pressure pass fixtures, self-loop strict L3 audit, template L2 audit without WARN/MISS, py_compile, cost smoke, skill quick_validate, source and installed validation
-Persistence: self-loop artifacts under `self/loop-runs/`, committed pressure fixture benchmark, template-placeholder audit benchmark, installed skill sync
+Verification: repo-root `.loop-harness` auto-discovery smoke, committed pressure pass fixtures, self-loop strict L3 audit, template L2 audit without WARN/MISS, py_compile, cost smoke, skill quick_validate, source and installed validation
+Persistence: self-loop artifacts under `self/loop-runs/`, `.loop-harness` artifact-root benchmark, installed skill sync
 Scheduling: stop_success
 
 ## Execution Orchestration
 
 Execution strategy: single-agent
 Parallel domains: none for this intervention
-Agent task ids: audit-template-placeholder-no-warning, committed-pressure-pass-fixtures
+Agent task ids: default-loop-artifact-root
 Worktree strategy: current coordinator workspace; no parallel file-changing agents used
 Integration owner: coordinator
 Conflict review: no parallel agent conflicts
-Integrated verification: source quick_validate pass, py_compile pass, self-loop strict audit L3 100/100, template audit L2 100/100 with no WARN/MISS, committed pressure fixture eval PASS 10/10 across 7 cases, cost smoke OK, diff check pass, installed sync pass, installed quick_validate pass, installed self-loop strict audit L3 100/100, installed template audit L2 100/100 with no WARN/MISS, installed committed pressure fixture eval PASS 10/10
+Integrated verification: repo-root auto-discovery smoke passed against a temp repo with `.loop-harness/` artifacts at 87/100 L2 and no WARN/MISS; source quick_validate pass, py_compile pass, self-loop strict audit L3 100/100, template audit L2 100/100 with no WARN/MISS, committed pressure fixture eval PASS 10/10 across 7 cases, cost smoke OK, diff check pass, installed sync pass, installed quick_validate pass, installed repo-root auto-discovery smoke pass, installed self-loop strict audit L3 100/100, installed template audit L2 100/100 with no WARN/MISS, installed committed pressure fixture eval PASS 10/10
 
 ## Candidate Backlog
 
@@ -55,6 +55,8 @@ Integrated verification: source quick_validate pass, py_compile pass, self-loop 
 - Do not let `SKILL.md` grow into the full operations manual when reference files can carry detailed contract sections.
 - Do not report template-placeholder state/log absence as WARN when auditing `assets/templates` as a template package.
 - Do not rely on uncommitted tmpdir transcripts for pressure eval smoke validation.
+- Do not scatter target-repo loop artifacts across repo root; use `.loop-harness/` by default.
+- Do not make users pass `.loop-harness/` explicitly when audit can auto-detect it from repo root.
 
 ## Active Benchmark Regressions
 
@@ -63,6 +65,7 @@ Integrated verification: source quick_validate pass, py_compile pass, self-loop 
 - `skill-md-progressive-disclosure`: `SKILL.md` stays concise and routes full behavior to one-level reference files.
 - `template-placeholder-audit-no-warning`: `assets/templates` audit passes L2 without WARN/MISS while still not claiming L3 scheduled readiness.
 - `committed-pressure-pass-fixtures`: pressure eval has committed pass fixtures for all critical cases and scores 10/10.
+- `default-loop-artifact-root`: target-repo artifacts live in `.loop-harness/`, pressure transcripts require that path, and audit auto-detects it from repo root.
 
 ## Iteration History
 
@@ -74,6 +77,7 @@ Integrated verification: source quick_validate pass, py_compile pass, self-loop 
 - 2026-06-30T07:45:29Z: Added audit min-level/strict gate semantics and blocking-finding non-zero exit behavior; source and installed verification passed.
 - 2026-06-30T07:54:23Z: Reduced `SKILL.md` to an entrypoint and moved detailed operations contract to `references/operation.md`; source and installed verification passed.
 - 2026-06-30T08:01:27Z: Removed template-placeholder WARN noise and added committed pressure pass fixtures; source and installed verification passed.
+- 2026-06-30T08:50:55Z: Standardized target-repo artifacts under `.loop-harness/`, added repo-root audit auto-discovery, and updated pressure benchmarks; source and installed verification passed.
 
 ## Human Decisions
 

@@ -16,7 +16,7 @@ There are three independent domains, such as separate test files, separate produ
 - Use `parallel-agents` only when independence is justified.
 - Create one focused task per domain.
 - Each task includes scope, goal, constraints, expected output, verification command, and allowed files/surfaces.
-- Persist tasks in `AGENT_HANDOFF.md` or `agent-tasks/<task-id>.md`.
+- Persist tasks in `.loop-harness/AGENT_HANDOFF.md` or `.loop-harness/agent-tasks/<task-id>.md`.
 - Review returned summaries and changed files for conflicts.
 - Run integrated verification after merging or applying agent outputs.
 

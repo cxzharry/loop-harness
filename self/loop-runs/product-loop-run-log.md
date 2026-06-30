@@ -4,6 +4,86 @@ Append one entry per loop run.
 
 ## Entries
 
+### 2026-06-30T08:50:55Z
+
+#### Raw Run Result
+
+- Profile: engineering-quality, content-docs
+- Discovery signals:
+  - User approved standardizing loop artifacts into a dedicated folder instead of scattering `PRODUCT_LOOP*`, run-log, benchmark, budget, handoff, and worktree files at repo root.
+  - RED test: a temp repo containing `.loop-harness/` artifacts failed when auditing the repo root because `product_loop_audit.py` only read direct root artifacts.
+  - Existing pressure benchmarks mentioned artifact filenames without enforcing the `.loop-harness/` artifact root.
+- Handoff:
+  - Use `.loop-harness/` as the default artifact root in target repos.
+  - Keep `self/loop-runs/` as the internal exception for loop-harness self-development.
+  - Make `product_loop_audit.py <repo-root>` auto-detect `<repo-root>/.loop-harness`.
+  - Update pressure benchmarks and pass fixtures so durable persistence paths include `.loop-harness/`.
+- Selected intervention: default loop artifact root plus repo-root audit auto-discovery.
+- Execution strategy: single-agent
+- Agent tasks: default-loop-artifact-root
+- Worktree map: self/loop-runs/worktree-map.md
+- Conflict review: no parallel conflicts
+- Integration verification: source validation complete before installed sync
+- Verification evidence:
+  - RED: temp repo with `.loop-harness/` artifacts returned `Product Loop Readiness: 0/100 L0` when audited at repo root.
+  - GREEN: temp repo with `.loop-harness/` artifacts returned `Product Loop Readiness: 87/100 L2` with no WARN/MISS when audited at repo root.
+  - `python3 benchmark/run_pressure_eval.py --transcripts benchmark/fixtures/pass` passed 7/7 cases at 10/10 with `.loop-harness/` path requirements.
+  - `python3 scripts/product_loop_audit.py self/loop-runs --strict` passed at 100/100 L3.
+  - `python3 scripts/product_loop_audit.py assets/templates --min-level L2` passed at 100/100 L2.
+- Playwright evidence:
+  - URL: not applicable
+  - Viewport: not applicable
+  - Flow steps: not applicable
+  - Assertions: not applicable
+  - Screenshot/trace: not applicable
+- Error output: pre-fix audit missed `.loop-harness/` when called with the product repo root.
+- Failed assertions: repo-root audit should discover `.loop-harness/`; target-repo persistence should not be scattered at root.
+- Verdict: PASS
+- Files changed:
+  - `SKILL.md`
+  - `references/operation.md`
+  - `references/state-schema.md`
+  - `references/verification.md`
+  - `references/scoring.md`
+  - `scripts/product_loop_audit.py`
+  - `benchmark/manifest.json`
+  - `benchmark/cases/active_benchmark_blocks_forward.md`
+  - `benchmark/cases/failed_iteration_promotes_benchmark.md`
+  - `benchmark/cases/parallel_agents_independent.md`
+  - `benchmark/cases/ux_requires_taste_slop_benchmark.md`
+  - `benchmark/cases/worktree_isolation.md`
+  - `benchmark/fixtures/pass/active_benchmark_blocks_forward.md`
+  - `benchmark/fixtures/pass/failed_iteration_promotes_benchmark.md`
+  - `benchmark/fixtures/pass/parallel_agents_independent.md`
+  - `benchmark/fixtures/pass/worktree_isolation.md`
+  - `self/loop-runs/PRODUCT_LOOP_STATE.md`
+  - `self/loop-runs/PRODUCT_LOOP_BENCHMARK.md`
+  - `self/loop-runs/product-loop-run-log.md`
+- Next scheduling decision: stop_success
+
+#### Finding
+
+- Finding id: finding-2026-06-30-default-loop-artifact-root
+- Error class: scope_regression
+- Symptom: target-repo loop artifacts would be scaffolded/read as loose root files, and repo-root audit did not discover a dedicated `.loop-harness/` artifact directory.
+- Evidence: pre-fix temp repo with `.loop-harness/` artifacts audited at repo root returned `0/100 L0`; pressure benchmark fixtures did not require `.loop-harness/` persistence paths.
+- Root cause/hypothesis: early artifacts were optimized for quick scaffolding, then self-development moved to `self/loop-runs/` without defining the equivalent target-repo artifact root.
+- Reproduction steps: create a temp repo, place valid loop artifacts in `.loop-harness/`, run `python3 scripts/product_loop_audit.py <repo-root> --min-level L2`.
+- Severity: medium
+- Confidence: high
+- Status: promoted
+
+#### Benchmark Promotion
+
+- Promotion decision: promoted
+- Benchmark case id: default-loop-artifact-root
+- Matching rule: changes touch artifact path conventions, scaffold instructions, audit root resolution, pressure persistence cases, handoff paths, or worktree map paths.
+- Expected result: target repos use `.loop-harness/` by default; repo-root audit auto-detects `.loop-harness/`; pressure fixtures require `.loop-harness/` paths for run-log, state, benchmark, handoff, agent tasks, and worktree map.
+- Verification command: temp repo `.loop-harness/` audit smoke plus `python3 benchmark/run_pressure_eval.py --transcripts benchmark/fixtures/pass`
+- Status: active
+- State promoted: `.loop-harness/` is the default target-repo artifact root.
+- Benchmark promoted: active regression case for artifact-root convention and repo-root audit auto-discovery.
+
 ### 2026-06-30T08:01:27Z
 
 #### Raw Run Result

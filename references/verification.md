@@ -71,7 +71,7 @@ Reject or escalate when:
 
 ## Benchmark Gate
 
-Before accepting a new intervention, load `PRODUCT_LOOP_BENCHMARK.md` and run active regression cases matching the same surface, profile, changed files, or metric.
+Before accepting a new intervention, load `.loop-harness/PRODUCT_LOOP_BENCHMARK.md` and run active regression cases matching the same surface, profile, changed files, or metric.
 
 Rules:
 - Run matching benchmark cases before judging new optimization success.
@@ -87,7 +87,7 @@ When execution used multiple agents:
 - Check whether agents touched the same files, surfaces, fixtures, or state artifacts.
 - Run matching active benchmark cases after integration, not only in each agent workspace.
 - Run the relevant full verification suite in the coordinator workspace after integrating changes.
-- Persist conflict review, integrated verification, and worktree decisions in `AGENT_HANDOFF.md`, `worktree-map.md`, and `product-loop-run-log.md`.
+- Persist conflict review, integrated verification, and worktree decisions in `.loop-harness/AGENT_HANDOFF.md`, `.loop-harness/worktree-map.md`, and `.loop-harness/product-loop-run-log.md`.
 - If integrated verification cannot run, verdict is `UNKNOWN` or `ENV`, not `PASS`.
 
 ## Profile Checks

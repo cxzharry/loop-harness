@@ -25,18 +25,19 @@ Use `AskUserQuestion` only for decisions that cannot be safely inferred:
 - Human gate: pricing, payment, auth, permissions, secrets, destructive migration, legal/compliance, brand-sensitive copy, or major product direction.
 - Scheduled/actioning loop approval when cost or risk is material.
 
-Do not ask when a safe default exists. Record the assumption in `PRODUCT_LOOP_STATE.md` and continue.
+Do not ask when a safe default exists. Record the assumption in `.loop-harness/PRODUCT_LOOP_STATE.md` and continue.
 
 ## Start Of Run
 
 1. Identify intent and product surface in one line.
-2. Load existing artifacts if present: `PRODUCT_LOOP.md`, `PRODUCT_LOOP_STATE.md`, `product-loop-run-log.md`, `PRODUCT_LOOP_BENCHMARK.md`, and `product-loop-budget.md`.
-3. Scaffold missing ongoing-loop artifacts from `assets/templates/`.
-4. Select profiles using `references/profiles.md`.
-5. Select a pattern using `references/patterns.md` and `assets/templates/product-loop-patterns.json` when cadence or recurring scope matters.
-6. Ask only unresolved metric, target, risk, or schedule decisions.
-7. Run `scripts/product_loop_audit.py <repo-or-folder> --min-level L2` after scaffolding or artifact changes.
-8. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
+2. Use `.loop-harness/` as the default artifact root in target repos unless the user explicitly chooses another folder.
+3. Load existing artifacts if present: `.loop-harness/PRODUCT_LOOP.md`, `.loop-harness/PRODUCT_LOOP_STATE.md`, `.loop-harness/product-loop-run-log.md`, `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`, and `.loop-harness/product-loop-budget.md`.
+4. Scaffold missing ongoing-loop artifacts into `.loop-harness/` from `assets/templates/`.
+5. Select profiles using `references/profiles.md`.
+6. Select a pattern using `references/patterns.md` and `assets/templates/product-loop-patterns.json` when cadence or recurring scope matters.
+7. Ask only unresolved metric, target, risk, or schedule decisions.
+8. Run `scripts/product_loop_audit.py <repo-root-or-.loop-harness> --min-level L2` after scaffolding or artifact changes. The audit auto-detects `<repo>/.loop-harness` when passed a repo root.
+9. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
 
 ## Execution Modes
 
@@ -87,12 +88,12 @@ Use one agent when findings share state, require one mental model, or may confli
 
 For parallel agents:
 - Create one task per domain with scope, goal, constraints, expected output, verification command, and allowed files/surfaces.
-- Record tasks in `AGENT_HANDOFF.md` or `agent-tasks/<task-id>.md`.
+- Record tasks in `.loop-harness/AGENT_HANDOFF.md` or `.loop-harness/agent-tasks/<task-id>.md`.
 - Require each agent to return root cause/hypothesis, changed files, verification evidence, risks, and next handoff.
 - Review conflicts before integration.
 - Run matching benchmark cases and the relevant full verification suite after integration.
 
-For file-changing parallel agents, use isolated workspaces. Detect existing linked worktrees, treat submodules as repos, prefer native worktree tools when available, fall back to `git worktree`, verify `.worktrees/` or `worktrees/` is ignored, and write `worktree-map.md`. If blocked, record the blocker and run sequentially or report-only.
+For file-changing parallel agents, use isolated workspaces. Detect existing linked worktrees, treat submodules as repos, prefer native worktree tools when available, fall back to `git worktree`, verify `.worktrees/` or `worktrees/` is ignored, and write `.loop-harness/worktree-map.md`. If blocked, record the blocker and run sequentially or report-only.
 
 Parallel execution cannot pass until agent results are reviewed, changed files are conflict-checked, matching benchmarks pass, relevant tests/build/Playwright checks pass or a non-pass verdict is persisted, and state/run-log/benchmark/handoff/worktree map are updated.
 
@@ -102,10 +103,10 @@ Every failed iteration must become future regression protection.
 
 When verdict is `FAIL`, `REGRESSION`, `PARTIAL` with a defect, `ENV`, or `UNKNOWN`:
 1. Classify the error.
-2. Append raw run evidence and a structured `Finding` block to `product-loop-run-log.md`.
+2. Append raw run evidence and a structured `Finding` block to `.loop-harness/product-loop-run-log.md`.
 3. Decide whether to promote.
-4. Promote durable facts to `PRODUCT_LOOP_STATE.md`.
-5. Create or update a regression case in `PRODUCT_LOOP_BENCHMARK.md` only from a promoted finding.
+4. Promote durable facts to `.loop-harness/PRODUCT_LOOP_STATE.md`.
+5. Create or update a regression case in `.loop-harness/PRODUCT_LOOP_BENCHMARK.md` only from a promoted finding.
 6. In the next iteration, run matching active benchmark cases before new optimization.
 
 Do not create separate error or finding files. The single run-log entry contains `Raw Run Result`, `Finding`, and `Benchmark Promotion` blocks. Use `references/state-schema.md` for exact fields.
@@ -113,7 +114,7 @@ Do not create separate error or finding files. The single run-log entry contains
 Error classes: `ui_regression`, `runtime_error`, `metric_regression`, `content_drift`, `env_blocker`, `scope_regression`.
 
 Benchmark gate:
-- During Discovery, load `PRODUCT_LOOP_BENCHMARK.md` and select active cases matching current surface, profile, files, or metric.
+- During Discovery, load `.loop-harness/PRODUCT_LOOP_BENCHMARK.md` and select active cases matching current surface, profile, files, or metric.
 - During Verification, run matching active cases before accepting new intervention.
 - If an active case fails, classify as `REGRESSION`, persist it, and fix that case before optimizing forward.
 - Retire a benchmark only when the product surface or requirement is intentionally removed and recorded in state.

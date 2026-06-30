@@ -23,7 +23,7 @@ Break ties by choosing the candidate with stronger verification evidence.
 
 | Level | Meaning | Minimum bar |
 |---|---|---|
-| L0 | Draft | `PRODUCT_LOOP.md` describes goal/scope |
+| L0 | Draft | `.loop-harness/PRODUCT_LOOP.md` describes goal/scope |
 | L1 | Report-only | Discovery writes state; no source changes |
 | L2 | Assisted optimization | Bounded changes with independent verification |
 | L3 | Scheduled/unattended-capable | State, run log, budget, verifier, human gates, proven activity |

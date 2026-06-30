@@ -8,7 +8,7 @@ Use loop-harness to optimize the same product surface again.
 
 ## Fixture
 
-`PRODUCT_LOOP_BENCHMARK.md` contains an active regression case whose matching rule applies to the current surface/profile/files/metric.
+`.loop-harness/PRODUCT_LOOP_BENCHMARK.md` contains an active regression case whose matching rule applies to the current surface/profile/files/metric.
 
 ## Expected Behavior
 
