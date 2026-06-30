@@ -4,6 +4,79 @@ Append one entry per loop run.
 
 ## Entries
 
+### 2026-06-30T07:04:04Z
+
+#### Raw Run Result
+
+- Profile: engineering-quality, content-docs
+- Discovery signals:
+  - User confirmed a single active run log should contain raw run errors and findings.
+  - Package had both `assets/templates/product-loop-run-log.md` and `self/loop-runs/product-loop-run-log.md`, causing confusion between template and active log.
+  - Existing run-log template lacked explicit Raw Run Result, Finding, and Benchmark Promotion sections.
+- Handoff:
+  - Rename the template to `assets/templates/product-loop-run-log.template.md`.
+  - Keep `self/loop-runs/product-loop-run-log.md` as the only active run log for loop-harness self-runs.
+  - Update skill contract and schema so one run-log entry contains raw result, finding, and benchmark promotion decision.
+- Selected intervention: single-log schema and template rename.
+- Execution strategy: single-agent
+- Agent tasks: single-run-log-finding-schema
+- Worktree map: self/loop-runs/worktree-map.md
+- Conflict review: no parallel conflicts
+- Integration verification: source and installed validation complete
+- Verification evidence:
+  - `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py benchmark/run_pressure_eval.py`
+  - `python3 scripts/product_loop_audit.py self/loop-runs` passed at 100/100 L3.
+  - `python3 scripts/product_loop_audit.py assets/templates` passed at 87/100 L2 with expected template warnings for no real run activity.
+  - `python3 benchmark/run_pressure_eval.py --transcripts <tmpdir>` passed 7/7 synthetic transcripts at 10/10.
+  - `python3 benchmark/run_pressure_eval.py` failed missing transcripts as expected.
+  - `python3 scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d` returned Status OK.
+  - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/haido/loop-harness` passed.
+  - `rsync -a --delete --exclude .git --exclude .worktrees --exclude __pycache__ /Users/haido/loop-harness/ /Users/haido/.codex/skills/loop-harness/`
+  - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/haido/.codex/skills/loop-harness` passed.
+  - `python3 /Users/haido/.codex/skills/loop-harness/scripts/product_loop_audit.py /Users/haido/.codex/skills/loop-harness/self/loop-runs` passed at 100/100 L3.
+  - Installed run-log path check found only `assets/templates/product-loop-run-log.template.md` and `self/loop-runs/product-loop-run-log.md`.
+- Playwright evidence:
+  - URL: not applicable
+  - Viewport: not applicable
+  - Flow steps: not applicable
+  - Assertions: not applicable
+  - Screenshot/trace: not applicable
+- Error output: none
+- Failed assertions: none
+- Verdict: PASS
+- Files changed:
+  - `SKILL.md`
+  - `references/state-schema.md`
+  - `assets/templates/product-loop-run-log.template.md`
+  - `scripts/product_loop_audit.py`
+  - `benchmark/manifest.json`
+  - `benchmark/cases/failed_iteration_promotes_benchmark.md`
+  - `self/loop-runs/product-loop-run-log.md`
+- Next scheduling decision: stop_success
+
+#### Finding
+
+- Finding id: finding-2026-06-30-single-run-log-schema
+- Error class: scope_regression
+- Symptom: template run-log and active self-run log shared the same filename, and the run-log schema did not explicitly capture finding before benchmark promotion.
+- Evidence: `find /Users/haido/loop-harness -path '*product-loop-run-log*'` returned both template and active self-run log paths.
+- Root cause/hypothesis: template files used final artifact names, which is convenient for copying but ambiguous inside the skill package.
+- Reproduction steps: inspect `assets/templates/` and `self/loop-runs/` for `product-loop-run-log.md`.
+- Severity: medium
+- Confidence: high
+- Status: promoted
+
+#### Benchmark Promotion
+
+- Promotion decision: promoted
+- Benchmark case id: single-run-log-finding-schema
+- Matching rule: loop-harness package structure or state schema touches run-log, findings, or benchmark promotion.
+- Expected result: exactly one active run log per loop context; template files use `.template.md`; each run-log entry contains Raw Run Result, Finding, and Benchmark Promotion blocks.
+- Verification command: `find <skill-dir> -path '*product-loop-run-log*' -print`
+- Status: active
+- State promoted: single active run-log convention and finding schema.
+- Benchmark promoted: do not create separate error-log/findings files; promote benchmark only from run-log finding.
+
 ### 2026-06-30T05:29:01Z
 
 - Profile: engineering-quality, content-docs

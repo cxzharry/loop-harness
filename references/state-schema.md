@@ -38,19 +38,16 @@ Required sections:
 
 ## product-loop-run-log.md
 
-Append-only. Each entry includes:
+Append-only. This is the only file for raw run errors and findings; do not create separate error-log or findings files.
+
+Each entry includes:
 - Timestamp.
-- Profile.
-- Discovery signals.
-- Selected intervention.
-- Verification evidence.
-- Playwright URL, viewport, flow steps, assertions, screenshots/traces when app verification was needed.
-- Verdict.
-- Files changed or no-change reason.
-- Next scheduling decision.
-- Iteration state for run-until-done loops.
-- Promotion notes: what moved into state and benchmark.
+- Raw Run Result: profile, discovery signals, selected intervention, verification evidence, Playwright URL/viewport/flow/assertions/screenshots/traces, error output, failed assertions, verdict, files changed or no-change reason, next scheduling decision, and iteration state.
+- Finding: finding id, error class, symptom, evidence, root cause/hypothesis, reproduction steps, severity, confidence, and status.
+- Benchmark Promotion: promotion decision, benchmark case id, matching rule, expected result, verification command, status, and what moved into state/benchmark.
 - Agent task ids, worktree map, conflict review, and integration verification when parallel agents are used.
+
+Use `Finding Status: not_applicable` and `Error class: none` for clean passing iterations. Use `Promotion decision: not_promoted` when a failure is noise, one-off, already covered, or not reproducible enough to become a benchmark.
 
 ## PRODUCT_LOOP_BENCHMARK.md
 

@@ -69,6 +69,11 @@
         "\\bVerdict\\b[\\s\\S]{0,80}\\bFAIL\\b|\\bREGRESSION\\b|\\bPARTIAL\\b|\\bENV\\b|\\bUNKNOWN\\b",
         "\\berror classification\\b|\\bui_regression\\b|\\bruntime_error\\b|\\bmetric_regression\\b|\\bcontent_drift\\b|\\benv_blocker\\b|\\bscope_regression\\b",
         "\\bproduct-loop-run-log\\.md\\b",
+        "\\bFinding id\\b",
+        "\\bSymptom\\b",
+        "\\broot cause/hypothesis\\b|\\bRoot cause\\b|\\bhypothesis\\b",
+        "\\bReproduction steps\\b",
+        "\\bBenchmark Promotion\\b|\\bPromotion decision\\b",
         "\\bPRODUCT_LOOP_STATE\\.md\\b",
         "\\bPRODUCT_LOOP_BENCHMARK\\.md\\b",
         "\\bRegression Case\\b",
@@ -76,7 +81,8 @@
         "\\bStatus\\b[\\s\\S]{0,40}\\bactive\\b"
       ],
       "forbidden_patterns": [
-        "\\bFAIL\\b[\\s\\S]{0,240}\\bBenchmark regression case\\b[\\s\\S]{0,80}\\bnone\\b"
+        "\\bFAIL\\b[\\s\\S]{0,240}\\bBenchmark regression case\\b[\\s\\S]{0,80}\\bnone\\b",
+        "\\berror-log\\.md\\b|\\bfindings\\.md\\b|\\brun-log-error\\.md\\b"
       ]
     },
     {

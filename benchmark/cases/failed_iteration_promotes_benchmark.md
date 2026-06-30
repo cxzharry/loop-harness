@@ -14,6 +14,9 @@ Use loop-harness to continue the current loop after the latest verification fail
 
 - Classify the failure as one of the supported error classes.
 - Append raw evidence to `product-loop-run-log.md`.
+- Add a structured `Finding` block in the same run-log entry.
+- Include `Finding id`, symptom, evidence, root cause/hypothesis, reproduction steps, severity, confidence, and status.
+- Add a `Benchmark Promotion` block in the same run-log entry.
 - Promote durable facts into `PRODUCT_LOOP_STATE.md`.
 - Create or update an active `Regression Case` in `PRODUCT_LOOP_BENCHMARK.md`.
 - Include source run-log entry, trigger condition, expected result, failure evidence, matching rule, owner profile, last failed, and `Status: active`.
@@ -23,4 +26,6 @@ Use loop-harness to continue the current loop after the latest verification fail
 
 - Leaves failed iteration only in chat.
 - Does not create active benchmark protection.
+- Creates benchmark protection without first recording a finding.
+- Creates a separate error-log or findings file instead of using the run-log entry.
 - Continues optimizing forward while the failure is unclassified.

@@ -18,6 +18,9 @@ FILES = {
     "handoff": "AGENT_HANDOFF.md",
     "worktree": "worktree-map.md",
 }
+FILE_FALLBACKS = {
+    "log": ["product-loop-run-log.template.md"],
+}
 
 PHASES = ["discovery", "handoff", "verification", "persistence", "scheduling"]
 PROFILES = [
@@ -34,6 +37,20 @@ ITERATION_FIELDS = ["execution mode", "current iteration", "target", "latest ver
 INTENT_FIELDS = ["intent", "primary metric", "baseline window", "user confirmations"]
 PLAYWRIGHT_FIELDS = ["playwright", "url", "viewport", "flow steps", "assertions"]
 PROMOTION_FIELDS = ["promotion", "state", "benchmark"]
+RUN_LOG_FINDING_FIELDS = [
+    "raw run result",
+    "finding",
+    "finding id",
+    "symptom",
+    "evidence",
+    "root cause/hypothesis",
+    "reproduction steps",
+    "severity",
+    "confidence",
+    "benchmark promotion",
+    "promotion decision",
+    "benchmark case id",
+]
 BENCHMARK_FIELDS = ["known-good flows", "regression checks", "do not regress"]
 ORCHESTRATION_FIELDS = [
     "execution strategy",
@@ -80,6 +97,17 @@ def read(path: Path) -> str:
         return path.read_text(encoding="utf-8").lower()
     except FileNotFoundError:
         return ""
+
+
+def read_artifact(root: Path, key: str, filename: str) -> str:
+    content = read(root / filename)
+    if content:
+        return content
+    for fallback in FILE_FALLBACKS.get(key, []):
+        content = read(root / fallback)
+        if content:
+            return content
+    return ""
 
 
 def load_patterns(root: Path) -> list[dict]:
@@ -156,7 +184,7 @@ def main() -> int:
     score = 0
     findings: list[str] = []
 
-    contents = {key: read(root / filename) for key, filename in FILES.items()}
+    contents = {key: read_artifact(root, key, filename) for key, filename in FILES.items()}
 
     for key, filename in FILES.items():
         if contents[key]:
@@ -249,6 +277,14 @@ def main() -> int:
         findings.append(f"WARN log promotion fields incomplete: {', '.join(missing_promotion_fields)}")
     else:
         findings.append("OK run-log promotion fields present")
+
+    finding_hits = [field for field in RUN_LOG_FINDING_FIELDS if field in contents["log"]]
+    score += min(8, len(finding_hits))
+    missing_finding_fields = sorted(set(RUN_LOG_FINDING_FIELDS) - set(finding_hits))
+    if missing_finding_fields:
+        findings.append(f"WARN run-log finding schema incomplete: {', '.join(missing_finding_fields)}")
+    else:
+        findings.append("OK run-log raw result, finding, and benchmark promotion schema present")
 
     benchmark_hits = [field for field in BENCHMARK_FIELDS if field in contents["benchmark"]]
     score += len(benchmark_hits) * 2
@@ -348,6 +384,7 @@ def main() -> int:
         and not missing_intent_fields
         and not missing_playwright_fields
         and not missing_promotion_fields
+        and not missing_finding_fields
         and not missing_benchmark_fields
         and not missing_orchestration_fields
         and not missing_regression_case_fields

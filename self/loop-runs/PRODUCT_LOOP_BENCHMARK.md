@@ -42,6 +42,10 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Source run-log entry: 2026-06-30T05:29:01Z
 - Why it matters: keeping benchmarks and logs separate prevents agents from confusing loop-harness self-development artifacts with target-repo loop artifacts.
 
+- Check: Each loop context has one active `product-loop-run-log.md`; raw errors, findings, and benchmark promotion decisions are recorded inside the same run-log entry.
+- Source run-log entry: 2026-06-30T07:04:04Z
+- Why it matters: separate error-log or findings files make promotion provenance harder to audit and can split the evidence chain.
+
 ## Regression Cases
 
 ## Regression Case: sample-case-id
@@ -76,3 +80,6 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 
 - Rule: Do not place `PRODUCT_LOOP*.md`, `product-loop-*.md`, `AGENT_HANDOFF.md`, or `worktree-map.md` at the skill package root for self-development runs.
 - Evidence: `self/loop-runs/`, `benchmark/`, `SKILL.md`
+
+- Rule: Do not create separate `error-log.md`, `findings.md`, or `run-log-error.md`; keep Raw Run Result, Finding, and Benchmark Promotion in `product-loop-run-log.md`.
+- Evidence: `SKILL.md`, `references/state-schema.md`, `assets/templates/product-loop-run-log.template.md`

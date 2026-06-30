@@ -172,10 +172,40 @@ Every failed iteration must become future regression protection.
 
 When verdict is `FAIL`, `REGRESSION`, `PARTIAL` with a defect, `ENV`, or `UNKNOWN`:
 1. Classify the error.
-2. Append raw evidence to `product-loop-run-log.md`.
-3. Promote durable facts to `PRODUCT_LOOP_STATE.md`.
-4. Create or update a regression case in `PRODUCT_LOOP_BENCHMARK.md`.
-5. In the next iteration, run matching active benchmark cases before any new optimization.
+2. Append raw run evidence and a structured `Finding` block to `product-loop-run-log.md`.
+3. Decide whether the finding should be promoted.
+4. Promote durable facts to `PRODUCT_LOOP_STATE.md`.
+5. Create or update a regression case in `PRODUCT_LOOP_BENCHMARK.md` only from a promoted finding.
+6. In the next iteration, run matching active benchmark cases before any new optimization.
+
+Do not create a separate error log or findings file. The single run-log entry must contain all three layers:
+
+```markdown
+#### Raw Run Result
+- Verdict:
+- Verification evidence:
+- Error output:
+- Failed assertions:
+
+#### Finding
+- Finding id:
+- Error class:
+- Symptom:
+- Evidence:
+- Root cause/hypothesis:
+- Reproduction steps:
+- Severity:
+- Confidence:
+- Status: open | promoted | dismissed | resolved | not_applicable
+
+#### Benchmark Promotion
+- Promotion decision: promoted | not_promoted
+- Benchmark case id:
+- Matching rule:
+- Expected result:
+- Verification command:
+- Status: active | retired | not_applicable
+```
 
 Error classes:
 - `ui_regression`: broken visible state, layout, responsive behavior, accessibility, or user flow.
@@ -307,18 +337,20 @@ Write durable state outside the conversation.
 
 Update:
 - `PRODUCT_LOOP_STATE.md`: current opportunities, selected intervention, status, failed attempts, human decisions, next action.
-- `product-loop-run-log.md`: append-only run summary with timestamp, profile, signals, action, verification, verdict, next schedule decision.
+- `product-loop-run-log.md`: append-only run summary with raw run result, structured finding, benchmark promotion decision, timestamp, profile, signals, action, verification, verdict, and next schedule decision.
 - `PRODUCT_LOOP_BENCHMARK.md`: promoted checks, known-good evidence, recurring smoke flows, and do-not-regress rules derived from run logs.
 - `AGENT_HANDOFF.md` or `agent-tasks/`: task scopes, assigned agents, constraints, outputs, integration decisions.
 - `worktree-map.md`: worktree paths, branches, task ids, status, verification, and cleanup/integration decision.
 
 After every iteration, persist before deciding the next loop action:
 1. Append the raw iteration result to `product-loop-run-log.md`.
-2. Promote durable facts from the log into `PRODUCT_LOOP_STATE.md`: active status, next target, failed attempts, and what not to retry.
-3. Promote reusable verification into `PRODUCT_LOOP_BENCHMARK.md`: Playwright flows, commands, expected states, accepted baselines, regression checks.
-4. Keep transient noise only in the run log unless it recurs.
-5. For every failed or regressed iteration, add or update a regression case with error class, matching rule, expected result, last failed, and status.
-6. For parallel runs, update handoff and worktree map with agent result, conflict review, integration verdict, and cleanup decision.
+2. Add a structured `Finding` block in the same run-log entry. Use `Status: not_applicable` and `Error class: none` when the iteration passed cleanly.
+3. Add a `Benchmark Promotion` block in the same run-log entry.
+4. Promote durable facts from the log into `PRODUCT_LOOP_STATE.md`: active status, next target, failed attempts, and what not to retry.
+5. Promote reusable verification into `PRODUCT_LOOP_BENCHMARK.md`: Playwright flows, commands, expected states, accepted baselines, regression checks.
+6. Keep transient noise only in the run log unless it recurs.
+7. For every failed or regressed iteration, add or update a regression case with error class, matching rule, expected result, last failed, and status when the finding is promoted.
+8. For parallel runs, update handoff and worktree map with agent result, conflict review, integration verdict, and cleanup decision.
 
 Persist failed hypotheses and what not to retry. Preserve useful learnings even when no code/docs change was made.
 
@@ -361,6 +393,7 @@ End each run with:
 
 ### Persistence
 <run-log append, state promotions, benchmark promotions, or reason not updated>
+<raw run result, finding id/status, benchmark promotion decision>
 
 Required after each iteration:
 - Run-log entry id/timestamp:
