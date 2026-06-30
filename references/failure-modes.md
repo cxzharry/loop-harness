@@ -41,3 +41,15 @@ Fix: Add early exit, lower cadence, and budget checks.
 Symptom: Humans stop reviewing medium-risk product decisions.
 
 Fix: Reinstate human gates and report-only mode for ambiguous product direction.
+
+## Endless Optimization Loop
+
+Symptom: The loop keeps changing the product after evidence has stopped improving.
+
+Fix: Use run-until-done stop conditions: SUCCESS, EXHAUSTED, PLATEAU, REGRESSION, BUDGET, HUMAN_GATE, ENV, UNKNOWN.
+
+## Implementation-Only Loop
+
+Symptom: The loop repeats edits without rerunning discovery, persistence, or scheduling.
+
+Fix: Require every iteration to execute all five phases, then record the verdict and next targeted criterion.

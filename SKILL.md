@@ -33,6 +33,60 @@ Do not skip a phase. If a phase lacks evidence, record the gap and route the run
 6. Run `scripts/product_loop_audit.py <repo-or-folder>` when artifacts exist or after scaffolding.
 7. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
 
+## Execution Modes
+
+Choose one mode at the start of each run:
+
+- `report-only`: Discover, verify signals, persist state, and stop without source changes.
+- `action-once`: Execute one bounded intervention, verify it, persist outcome, then stop.
+- `run-until-done`: Repeat full five-phase iterations until a stop condition fires.
+- `scheduled`: Run on cadence; each tick may be report-only, action-once, or run-until-done within budget.
+
+`run-until-done` requires:
+- A measurable target or acceptance rubric.
+- `max_iterations` or explicit token/wall-clock budget.
+- `target_min` or minimum acceptable verification bar.
+- Stop conditions and human gates written to state before actioning.
+
+If these are missing, downgrade to `report-only` or ask for the missing decision.
+
+## Run-Until-Done Controller
+
+In `run-until-done`, each iteration must execute all five phases. Do not loop only the implementation step.
+
+Default limits:
+- `max_iterations=3` unless the user provides a different limit.
+- `target=PASS` for binary verification, or `target_score=8/10` for rubric-based verification.
+- Stop early on human gate, budget cap, environment blocker, regression, or repeated plateau.
+
+Iteration loop:
+
+```text
+for i in 1..max_iterations:
+  Discovery: refresh state, evidence, previous failures, and current product signals.
+  Handoff: choose or refine one bounded intervention and hypothesis.
+  Verification: run profile-specific evidence checks after action.
+  Persistence: record verdict, evidence, scores, failed attempts, and what not to retry.
+  Scheduling: decide SUCCESS, NEXT_ITERATION, REPLAN, PAUSE, ESCALATE, or STOP.
+```
+
+Stop conditions:
+- `SUCCESS`: verification verdict is `PASS`, or every locked rubric criterion meets target.
+- `EXHAUSTED`: iteration limit reached.
+- `PLATEAU`: two consecutive iterations show no meaningful evidence improvement.
+- `REGRESSION`: product quality, tests, or target metric worsens materially.
+- `BUDGET`: token/time/change cap exceeded.
+- `HUMAN_GATE`: approval is required.
+- `ENV`: same environment blocker repeats twice.
+- `UNKNOWN`: required data is unavailable; route to instrumentation.
+
+Failure routing:
+- `discovery_gap` -> instrument, collect data, or switch to report-only.
+- `handoff_scope` -> re-scope smaller or escalate.
+- `verification_fail` -> next iteration targets the failed criterion.
+- `persistence_gap` -> halt and repair state/run-log before continuing.
+- `scheduling_risk` -> pause or reduce cadence.
+
 ## Phase 1: Discovery
 
 Find real signals before proposing work.
@@ -147,6 +201,9 @@ End each run with:
 
 ### Scheduling
 <next action and rationale>
+
+### Iteration State
+<iteration number, stop condition, target, score/verdict, next targeted criterion>
 ```
 
 ## References

@@ -5,6 +5,7 @@ Optimization goal:
 Pattern: daily-product-triage
 Profiles: ux-product, engineering-quality
 Readiness level: L1 report-only
+Execution mode: report-only
 Cadence:
 
 ## Scope
@@ -38,6 +39,13 @@ Test commands:
 ## Budget
 
 See `product-loop-budget.md`.
+
+## Run-Until-Done
+
+Target:
+Target minimum:
+Max iterations:
+Stop conditions: SUCCESS, EXHAUSTED, PLATEAU, REGRESSION, BUDGET, HUMAN_GATE, ENV, UNKNOWN
 
 ## Kill Switch
 

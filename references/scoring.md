@@ -49,3 +49,13 @@ Use `PARTIAL` when a bounded improvement landed but the product outcome is not y
 Use `FAIL` when checks fail, scope expands unexpectedly, or the evidence contradicts the hypothesis.
 
 Use `UNKNOWN` when data or environment prevents judgment.
+
+## Run-Until-Done Criteria
+
+Use run-until-done only when the loop has:
+- A measurable target or locked acceptance rubric.
+- Iteration cap or budget.
+- Stop conditions.
+- State fields for current iteration, latest verdict, and what not to retry.
+
+Do not classify a scheduled loop as L3 if it cannot stop itself on success, plateau, regression, budget, human gate, or repeated environment failure.

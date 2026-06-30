@@ -24,7 +24,9 @@ PROFILES = [
     "release-readiness",
 ]
 GATES = ["human gate", "denylist", "kill switch", "budget"]
-BUDGET_FIELDS = ["max runs", "max actioning changes", "kill switch", "escalation"]
+BUDGET_FIELDS = ["max runs", "max iterations", "max actioning changes", "kill switch", "escalation"]
+ITERATION_FIELDS = ["execution mode", "current iteration", "target", "latest verdict", "stop condition"]
+STOP_CONDITIONS = ["success", "exhausted", "plateau", "regression", "budget", "human_gate", "env", "unknown"]
 PATTERN_FILE = "product-loop-patterns.json"
 STARTER_DIRS = [
     "minimal-l1-report-only",
@@ -107,6 +109,22 @@ def main() -> int:
     else:
         findings.append("OK budget fields cover caps, kill switch, and escalation")
 
+    iteration_hits = [field for field in ITERATION_FIELDS if field in combined]
+    score += len(iteration_hits) * 2
+    missing_iteration_fields = sorted(set(ITERATION_FIELDS) - set(iteration_hits))
+    if missing_iteration_fields:
+        findings.append(f"WARN run-until-done fields incomplete: {', '.join(missing_iteration_fields)}")
+    else:
+        findings.append("OK run-until-done state fields present")
+
+    stop_hits = [condition for condition in STOP_CONDITIONS if condition in combined]
+    score += min(8, len(stop_hits))
+    missing_stop_conditions = sorted(set(STOP_CONDITIONS) - set(stop_hits))
+    if missing_stop_conditions:
+        findings.append(f"WARN stop conditions incomplete: {', '.join(missing_stop_conditions)}")
+    else:
+        findings.append("OK run-until-done stop conditions present")
+
     patterns = load_patterns(root)
     if patterns:
         valid_patterns = [
@@ -150,6 +168,8 @@ def main() -> int:
         and not missing_phases
         and not missing_gates
         and not missing_budget_fields
+        and not missing_iteration_fields
+        and not missing_stop_conditions
         and has_state_activity
         and has_run_log_entries
     ):

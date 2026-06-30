@@ -1,6 +1,11 @@
 # Product Loop State
 
 Last run: never
+Execution mode: report-only
+Current iteration: 0
+Target:
+Latest verdict:
+Stop condition:
 
 ## Active Opportunity
 
@@ -16,6 +21,8 @@ Scheduling:
 ## Watch List
 
 ## Failed Attempts / Do Not Retry
+
+## Iteration History
 
 ## Human Decisions
 
