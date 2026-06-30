@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 
@@ -43,6 +44,7 @@ REGRESSION_CASE_FIELDS = [
     "last passed",
     "status: active",
 ]
+FAILURE_VERDICTS = ["fail", "regression", "partial", "env", "unknown"]
 STOP_CONDITIONS = ["success", "exhausted", "plateau", "regression", "budget", "human_gate", "env", "unknown"]
 PATTERN_FILE = "product-loop-patterns.json"
 STARTER_DIRS = [
@@ -50,6 +52,13 @@ STARTER_DIRS = [
     "assisted-l2-product-fix",
     "scheduled-l3-product-loop",
 ]
+PLACEHOLDER_CASE_IDS = {"sample-case-id", "<stable-id>", "stable-id", ""}
+
+
+CASE_HEADING_RE = re.compile(r"^##\s+Regression Case:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
+FIELD_RE = re.compile(r"^-[ \t]*([^:]+):[ \t]*(.*?)[ \t]*$", re.IGNORECASE | re.MULTILINE)
+VERDICT_RE = re.compile(r"\bverdict\s*:\s*(fail|regression|partial|env|unknown)\b", re.IGNORECASE)
+RUN_LOG_ENTRY_RE = re.compile(r"^###\s+\d{4}-\d{2}-\d{2}t\d{2}:\d{2}:\d{2}z\b", re.IGNORECASE | re.MULTILINE)
 
 
 def read(path: Path) -> str:
@@ -73,6 +82,57 @@ def load_patterns(root: Path) -> list[dict]:
         if isinstance(patterns, list):
             return [p for p in patterns if isinstance(p, dict)]
     return []
+
+
+def has_failed_iteration(log_content: str) -> bool:
+    if VERDICT_RE.search(log_content):
+        return True
+    return any(f"latest verdict: {verdict}" in log_content for verdict in FAILURE_VERDICTS)
+
+
+def parse_regression_cases(benchmark_content: str) -> list[dict[str, object]]:
+    matches = list(CASE_HEADING_RE.finditer(benchmark_content))
+    cases: list[dict[str, object]] = []
+    for index, match in enumerate(matches):
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(benchmark_content)
+        block = benchmark_content[start:end]
+        fields = {key.strip().lower(): value.strip() for key, value in FIELD_RE.findall(block)}
+        cases.append({"id": match.group(1).strip().lower(), "fields": fields})
+    return cases
+
+
+def is_real_active_regression_case(case: dict[str, object]) -> bool:
+    case_id = str(case.get("id", "")).strip().lower()
+    if case_id in PLACEHOLDER_CASE_IDS:
+        return False
+    fields = case.get("fields", {})
+    if not isinstance(fields, dict):
+        return False
+
+    status = fields.get("status", "").strip().lower()
+    error_class = fields.get("error class", "").strip().lower()
+    required_non_empty = [
+        "source run-log entry",
+        "trigger condition",
+        "expected result",
+        "failure evidence",
+        "matching rule",
+        "last failed",
+    ]
+
+    return (
+        status == "active"
+        and error_class in {
+            "ui_regression",
+            "runtime_error",
+            "metric_regression",
+            "content_drift",
+            "env_blocker",
+            "scope_regression",
+        }
+        and all(fields.get(field, "").strip() for field in required_non_empty)
+    )
 
 
 def main() -> int:
@@ -174,6 +234,20 @@ def main() -> int:
     else:
         findings.append("OK regression case schema present")
 
+    failed_iterations_present = has_failed_iteration(contents["log"])
+    real_active_regression_cases = [
+        case for case in parse_regression_cases(contents["benchmark"])
+        if is_real_active_regression_case(case)
+    ]
+    missing_promoted_regression_cases = failed_iterations_present and not real_active_regression_cases
+    if missing_promoted_regression_cases:
+        findings.append("MISS failed iterations exist but no active promoted regression case was found")
+    elif failed_iterations_present:
+        score += min(5, len(real_active_regression_cases) * 5)
+        findings.append(f"OK active promoted regression cases: {len(real_active_regression_cases)}")
+    else:
+        findings.append("OK no failed iterations require active regression cases yet")
+
     stop_hits = [condition for condition in STOP_CONDITIONS if condition in combined]
     score += min(8, len(stop_hits))
     missing_stop_conditions = sorted(set(STOP_CONDITIONS) - set(stop_hits))
@@ -210,7 +284,7 @@ def main() -> int:
     else:
         findings.append("WARN no proven state activity")
 
-    has_run_log_entries = "###" in contents["log"] and "yyyy-mm-dd" not in contents["log"]
+    has_run_log_entries = bool(RUN_LOG_ENTRY_RE.search(contents["log"]))
     if has_run_log_entries:
         score += 7
         findings.append("OK run log has entries")
@@ -220,6 +294,8 @@ def main() -> int:
     score = min(score, 100)
     if not (has_state_activity and has_run_log_entries):
         score = min(score, 87)
+    if missing_promoted_regression_cases:
+        score = min(score, 89)
     if (
         score >= 80
         and not missing_phases
@@ -231,6 +307,7 @@ def main() -> int:
         and not missing_promotion_fields
         and not missing_benchmark_fields
         and not missing_regression_case_fields
+        and not missing_promoted_regression_cases
         and not missing_stop_conditions
         and has_state_activity
         and has_run_log_entries

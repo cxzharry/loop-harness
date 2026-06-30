@@ -296,6 +296,15 @@ End each run with:
 ### Persistence
 <run-log append, state promotions, benchmark promotions, or reason not updated>
 
+Required after each iteration:
+- Run-log entry id/timestamp:
+- State fields promoted:
+- Error classification: `<none | ui_regression | runtime_error | metric_regression | content_drift | env_blocker | scope_regression>`
+- Benchmark cases matched before verification:
+- Benchmark verdict: `<PASS | FAIL | REGRESSION | UNKNOWN | not applicable>`
+- Benchmark regression case id created/updated:
+- Evidence retained for future regression checks:
+
 ### Scheduling
 <next action and rationale>
 
