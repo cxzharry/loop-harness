@@ -13,8 +13,11 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
   - `quick_validate.py` passes for source and installed skill.
   - `product_loop_audit.py` compiles.
   - `product_loop_cost.py` compiles.
+  - `product_loop_audit.py self/loop-runs --min-level L3` exits 0.
+  - `product_loop_audit.py assets/templates --min-level L2` exits 0.
+  - `product_loop_audit.py assets/templates --strict` exits non-zero while template artifacts have warnings.
 - Screenshot/trace evidence: not applicable
-- Last verified: 2026-06-30T04:53:51Z
+- Last verified: 2026-06-30T07:45:29Z
 
 ### Pressure Transcript Scoring
 
@@ -51,6 +54,10 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Check: Benchmark and artifact audit scoring must reject skipped/not-run checks, negated evidence, and unfilled structured fields.
 - Source run-log entry: 2026-06-30T07:17:26Z
 - Why it matters: loop-harness can only prevent regressions if its benchmarks distinguish real verification from superficial text mentions.
+
+- Check: Product-loop audit hard misses must return non-zero exit codes, not only lower readiness levels in stdout.
+- Source run-log entry: 2026-06-30T07:45:29Z
+- Why it matters: automated gates and CI rely on exit codes; a hard miss with exit 0 lets regressions pass silently.
 
 ## Regression Cases
 
@@ -99,6 +106,21 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Last passed: 2026-06-30T07:17:26Z
 - Status: active
 
+## Regression Case: audit-hard-miss-exit-gate
+
+- Source run-log entry: 2026-06-30T07:45:29Z
+- Error class: scope_regression
+- Surface/URL: `scripts/product_loop_audit.py`
+- Trigger condition: audit output contains hard misses such as `MISS negated evidence claims present` or failed iterations without active promoted regression cases.
+- Playwright steps: not applicable
+- Expected result: audit returns non-zero exit code; `--min-level` fails below the requested level; `--strict` fails on any warning or miss; `non-zero` does not count as a `no ... finding` negated-evidence claim.
+- Failure evidence: pre-fix negated evidence fixture returned `Product Loop Readiness: 59/100 L1` with `MISS negated evidence claims present: 1` and exit code 0.
+- Matching rule: any change to product-loop audit exit-code logic, readiness thresholding, strict mode, hard-miss detection, or validation commands.
+- Owner profile: engineering-quality
+- Last failed: 2026-06-30T07:45:29Z pre-fix review
+- Last passed: 2026-06-30T07:45:29Z
+- Status: active
+
 ## Regression Case: sample-case-id
 
 - Source run-log entry:
@@ -134,3 +156,9 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 
 - Rule: Do not create separate `error-log.md`, `findings.md`, or `run-log-error.md`; keep Raw Run Result, Finding, and Benchmark Promotion in `product-loop-run-log.md`.
 - Evidence: `SKILL.md`, `references/state-schema.md`, `assets/templates/product-loop-run-log.template.md`
+
+- Rule: Do not let `product_loop_audit.py` return exit code 0 for hard misses such as negated evidence or missing promoted active regression cases.
+- Evidence: `scripts/product_loop_audit.py`, `self/loop-runs/product-loop-run-log.md`
+
+- Rule: Do not match `no` inside longer words such as `non-zero` when detecting negated evidence.
+- Evidence: `scripts/product_loop_audit.py`, `self/loop-runs/product-loop-run-log.md`

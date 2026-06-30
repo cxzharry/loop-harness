@@ -4,6 +4,88 @@ Append one entry per loop run.
 
 ## Entries
 
+### 2026-06-30T07:45:29Z
+
+#### Raw Run Result
+
+- Profile: engineering-quality, content-docs
+- Discovery signals:
+  - Code review found `scripts/product_loop_audit.py` reported `MISS negated evidence claims present` and capped readiness at 59/100 L1, but still returned exit code 0.
+  - A readiness level can be informational, but a hard miss must fail automated gates.
+  - Validation commands did not expose a minimum readiness level, so CI/smoke usage could accidentally accept L1 when L2/L3 was required.
+- Handoff:
+  - Add `--min-level` to make expected readiness explicit.
+  - Add `--strict` for CI/release gates that must fail on any warning or miss.
+  - Return non-zero for hard misses such as negated evidence and failed iterations without promoted active regression cases.
+  - Update validation instructions and self-loop checks to use explicit minimum levels.
+- Selected intervention: audit exit-code and threshold gate semantics.
+- Execution strategy: single-agent
+- Agent tasks: audit-hard-miss-exit-gate
+- Worktree map: self/loop-runs/worktree-map.md
+- Conflict review: no parallel conflicts
+- Integration verification: source validation complete before installed sync
+- Verification evidence:
+  - RED: negated evidence fixture printed `MISS negated evidence claims present: 1` and `AUDIT_EXIT=0`; the regression wrapper failed as expected.
+  - GREEN: same negated evidence fixture now prints `AUDIT_EXIT=1`.
+  - `python3 scripts/product_loop_audit.py self/loop-runs --min-level L3` passed at 100/100 L3.
+  - `python3 scripts/product_loop_audit.py assets/templates --min-level L2` passed at 87/100 L2.
+  - `python3 scripts/product_loop_audit.py assets/templates --strict` returned exit 1 as expected because templates have warnings.
+  - Regex boundary smoke: `non-zero ... finding` in self-run narrative no longer triggers negated-evidence detection.
+  - `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py benchmark/run_pressure_eval.py` passed.
+  - `python3 scripts/product_loop_audit.py assets/templates --min-level L3` returned exit 1 as expected.
+  - `python3 scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d` returned Status OK.
+  - `python3 benchmark/run_pressure_eval.py --transcripts <tmpdir>` passed 7/7 synthetic valid transcripts at 10/10.
+  - `python3 benchmark/run_pressure_eval.py` failed missing transcripts with exit 1 as expected.
+  - UX skipped/not-run pressure smoke failed with exit 1 as expected.
+  - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/haido/loop-harness` passed.
+  - `git diff --check` passed.
+  - `rsync -a --delete --exclude .git --exclude .worktrees --exclude __pycache__ /Users/haido/loop-harness/ /Users/haido/.codex/skills/loop-harness/`
+  - Installed `quick_validate.py /Users/haido/.codex/skills/loop-harness` passed.
+  - Installed `product_loop_audit.py self/loop-runs --min-level L3` passed at 100/100 L3.
+  - Installed `py_compile` for audit, cost, and pressure eval scripts passed.
+  - Installed negated artifact fixture returned exit 1 as expected.
+  - Installed pressure eval synthetic suite passed 7/7 at 10/10.
+- Playwright evidence:
+  - URL: not applicable
+  - Viewport: not applicable
+  - Flow steps: not applicable
+  - Assertions: not applicable
+  - Screenshot/trace: not applicable
+- Error output: pre-fix audit returned exit code 0 for a hard miss.
+- Failed assertions: hard audit miss should return non-zero.
+- Verdict: PASS
+- Files changed:
+  - `SKILL.md`
+  - `scripts/product_loop_audit.py`
+  - `self/loop-runs/PRODUCT_LOOP.md`
+  - `self/loop-runs/PRODUCT_LOOP_STATE.md`
+  - `self/loop-runs/PRODUCT_LOOP_BENCHMARK.md`
+  - `self/loop-runs/product-loop-run-log.md`
+- Next scheduling decision: stop_success
+
+#### Finding
+
+- Finding id: finding-2026-06-30-audit-hard-miss-exit-gate
+- Error class: scope_regression
+- Symptom: audit hard misses lowered readiness output but still returned shell success.
+- Evidence: negated evidence fixture returned `Product Loop Readiness: 59/100 L1`, `MISS negated evidence claims present: 1`, and `AUDIT_EXIT=0` before the fix.
+- Root cause/hypothesis: audit exit semantics treated any L1 artifact set as command success, even when findings included hard misses intended to block automation; negated-evidence parsing also treated `no` inside `non-zero` as a negated claim until the word boundary was tightened.
+- Reproduction steps: append `No human gate. Playwright not run. Benchmark Promotion not filled.` to a copied template run log, run `python3 scripts/product_loop_audit.py <fixture>`, and inspect the exit code.
+- Severity: high
+- Confidence: high
+- Status: promoted
+
+#### Benchmark Promotion
+
+- Promotion decision: promoted
+- Benchmark case id: audit-hard-miss-exit-gate
+- Matching rule: product-loop audit exit-code logic, thresholding, strict mode, hard-miss detection, or validation commands change.
+- Expected result: hard misses return non-zero; `--min-level` fails below the requested level; `--strict` fails on warnings or misses; words such as `non-zero` do not trigger negated-evidence detection.
+- Verification command: `python3 scripts/product_loop_audit.py <negated-artifact-fixture>` and `python3 scripts/product_loop_audit.py assets/templates --strict`
+- Status: active
+- State promoted: audit commands used as gates must specify minimum readiness or strict mode.
+- Benchmark promoted: audit hard-miss exit-code regression case.
+
 ### 2026-06-30T07:17:26Z
 
 #### Raw Run Result

@@ -427,9 +427,11 @@ Required after each iteration:
 After creating or changing loop artifacts, run:
 
 ```bash
-python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-or-folder>
+python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-or-folder> --min-level L2
 python3 <skill-dir>/scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d
 ```
+
+Use `--min-level L3` for scheduled or unattended loops. Use `--strict` when the audit is a CI/release gate; strict mode requires L3 and fails on any warning or miss. Hard misses such as negated evidence or failed iterations without promoted active regression cases must exit non-zero even when the numeric score is otherwise high enough for L1.
 
 When validating loop-harness behavior against real pressure-test transcripts, run:
 

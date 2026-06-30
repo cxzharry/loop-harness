@@ -36,8 +36,8 @@ Denylist:
 
 Primary checks:
 - `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py benchmark/run_pressure_eval.py`
-- `python3 scripts/product_loop_audit.py self/loop-runs`
-- `python3 scripts/product_loop_audit.py assets/templates`
+- `python3 scripts/product_loop_audit.py self/loop-runs --min-level L3`
+- `python3 scripts/product_loop_audit.py assets/templates --min-level L2`
 - `python3 benchmark/run_pressure_eval.py --transcripts <real-transcript-dir>`
 - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py <skill-dir>`
 

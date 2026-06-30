@@ -1,33 +1,33 @@
 # Product Loop State
 
-Last run: 2026-06-30T07:17:26Z
+Last run: 2026-06-30T07:45:29Z
 Intent: ENGINEERING_QUALITY
 Primary metric: pressure benchmark case score
 Baseline window: before `benchmark/` behavior benchmark scaffold
 Execution mode: run-until-done
-Current iteration: 5
+Current iteration: 6
 Target: all critical pressure benchmark cases score `>=8/10`
 Latest verdict: PASS
 Stop condition: SUCCESS
 
 ## Active Opportunity
 
-Harden benchmark and audit evidence checks so skipped or negated evidence cannot pass as completed verification.
+Make product-loop audit usable as an automated gate by returning non-zero for hard misses and unsupported readiness levels.
 
 Handoff: single-agent implementation in current coordinator workspace
-Verification: py_compile, self-loop audit, template audit, UX skipped negative smoke, negated artifact smoke, pressure eval synthetic smoke, missing transcript negative smoke, skill quick_validate
-Persistence: self-loop artifacts under `self/loop-runs/`, active benchmark regressions for false-positive scoring, installed skill sync
+Verification: py_compile, self-loop L3 audit, template L2 audit, strict negative audit, negated artifact exit-code smoke, pressure eval synthetic smoke, skill quick_validate
+Persistence: self-loop artifacts under `self/loop-runs/`, active benchmark regression for audit hard-miss exit behavior, installed skill sync
 Scheduling: stop_success
 
 ## Execution Orchestration
 
 Execution strategy: single-agent
 Parallel domains: none for this intervention
-Agent task ids: single-run-log-finding-schema
+Agent task ids: audit-hard-miss-exit-gate
 Worktree strategy: current coordinator workspace; no parallel file-changing agents used
 Integration owner: coordinator
 Conflict review: no parallel agent conflicts
-Integrated verification: source py_compile pass, source self-loop audit L3 100/100, template audit L2 87/100, UX skipped/not-run transcript smoke FAIL as expected, negated artifact smoke L1 59/100 as expected, synthetic pressure eval PASS 10/10 across 7 cases, missing-transcript negative smoke FAIL as expected, cost smoke OK, source quick_validate pass, installed sync pass, installed quick_validate pass, installed self-loop audit L3 100/100, installed template audit L2 87/100, installed py_compile pass, installed synthetic pressure eval PASS 10/10 across 7 cases, installed UX skipped/not-run smoke FAIL as expected
+Integrated verification: source py_compile pass, source self-loop audit L3 100/100 with `--min-level L3`, template audit L2 87/100 with `--min-level L2`, template `--strict` exit 1 as expected, template `--min-level L3` exit 1 as expected, negated artifact hard-miss fixture exit 1 as expected, regex boundary smoke pass for `non-zero`, synthetic pressure eval PASS 10/10 across 7 cases, missing-transcript pressure eval exit 1 as expected, UX skipped/not-run pressure smoke exit 1 as expected, cost smoke OK, source quick_validate pass, installed sync pass, installed quick_validate pass, installed self-loop audit L3 100/100 with `--min-level L3`, installed py_compile pass, installed negated artifact fixture exit 1 as expected, installed synthetic pressure eval PASS 10/10 across 7 cases
 
 ## Candidate Backlog
 
@@ -51,10 +51,12 @@ Integrated verification: source py_compile pass, source self-loop audit L3 100/1
 - Do not promote a benchmark case from a failure until the run-log entry contains a structured finding.
 - Do not treat skipped/not-run benchmark mentions as positive evidence.
 - Do not treat negated artifact statements such as `No human gate`, `Playwright not run`, or `Benchmark Promotion not filled` as passing evidence.
+- Do not allow hard audit misses to return exit code 0.
 
 ## Active Benchmark Regressions
 
 - `false-positive-benchmark-audit-hardening`: skipped UX benchmark transcripts fail, negated artifact evidence is capped below pass, and failed-iteration promotion requires filled structured sections.
+- `audit-hard-miss-exit-gate`: negated evidence and missing promoted regression cases return non-zero exit codes; self-run gates use `--min-level L3`.
 
 ## Iteration History
 
@@ -63,6 +65,7 @@ Integrated verification: source py_compile pass, source self-loop audit L3 100/1
 - 2026-06-30T05:29:01Z: Moved self-eval suite to `benchmark/`, moved self-run artifacts to `self/loop-runs/`, and added UX/UI benchmark criteria; source verification passed.
 - 2026-06-30T07:04:04Z: Added single run-log schema with Raw Run Result, Finding, and Benchmark Promotion; source and installed verification passed.
 - 2026-06-30T07:17:26Z: Hardened benchmark/audit scoring against skipped checks, negated evidence, and unfilled structured fields; source and installed verification passed.
+- 2026-06-30T07:45:29Z: Added audit min-level/strict gate semantics and blocking-finding non-zero exit behavior; source and installed verification passed.
 
 ## Human Decisions
 

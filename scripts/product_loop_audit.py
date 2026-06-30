@@ -82,6 +82,7 @@ STARTER_DIRS = [
     "assisted-l2-product-fix",
     "scheduled-l3-product-loop",
 ]
+LEVEL_RANK = {"L0": 0, "L1": 1, "L2": 2, "L3": 3}
 OPTIONAL_FILES = {"handoff", "worktree"}
 PLACEHOLDER_CASE_IDS = {"sample-case-id", "<stable-id>", "stable-id", ""}
 
@@ -92,7 +93,7 @@ VERDICT_RE = re.compile(r"\bverdict\s*:\s*(fail|regression|partial|env|unknown)\
 RUN_LOG_ENTRY_RE = re.compile(r"^###\s+\d{4}-\d{2}-\d{2}t\d{2}:\d{2}:\d{2}z\b", re.IGNORECASE | re.MULTILINE)
 NEGATED_EVIDENCE_RE = re.compile(
     r"("
-    r"\b(no|missing|absent)[^\n]{0,80}\b("
+    r"\b(no|missing|absent)\b[^\n]{0,80}\b("
     r"human gate|denylist|kill switch|budget|playwright|assertions|verification|promotion|benchmark|"
     r"finding|raw run result|benchmark promotion|execution strategy|worktree map|conflict review|integration verification"
     r")\b"
@@ -107,7 +108,7 @@ NEGATED_EVIDENCE_RE = re.compile(
 POLICY_LINE_RE = re.compile(
     r"("
     r"\b(do not|don't|should not|must not|not yet present)\b"
-    r"|rule:|baseline value:|symptom:|trigger condition:|reproduction steps:|failure evidence:"
+    r"|rule:|baseline value:|symptom:|trigger condition:|expected result:|reproduction steps:|failure evidence:"
     r"|\bcode review found\b|\bpre-fix\b|\bfailed as expected\b|\bkeep schema detection separate\b|\bdid not require\b"
     r")",
     re.IGNORECASE,
@@ -242,6 +243,17 @@ def is_real_active_regression_case(case: dict[str, object]) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("root", help="Product repo or folder to audit")
+    parser.add_argument(
+        "--min-level",
+        choices=sorted(LEVEL_RANK),
+        default="L1",
+        help="Minimum readiness level required for exit 0.",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Require L3 readiness and fail on any warning or miss.",
+    )
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
@@ -478,7 +490,17 @@ def main() -> int:
     for finding in findings:
         print(f"- {finding}")
 
-    return 0 if score >= 38 else 2
+    hard_fail = bool(negated_evidence_hits or missing_promoted_regression_cases)
+    has_warning_or_miss = any(
+        finding.startswith("WARN ") or finding.startswith("MISS ")
+        for finding in findings
+    )
+    required_level = "L3" if args.strict else args.min_level
+    meets_required_level = LEVEL_RANK[level] >= LEVEL_RANK[required_level]
+
+    if hard_fail or (args.strict and has_warning_or_miss) or not meets_required_level:
+        return 1 if score >= 38 else 2
+    return 0
 
 
 if __name__ == "__main__":
