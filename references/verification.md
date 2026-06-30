@@ -33,6 +33,17 @@ Reject or escalate when:
 - The loop repeats the same failed attempt.
 - Verification is only a claim without source evidence.
 - The expected metric cannot be observed and no instrumentation is proposed.
+- A matching active benchmark regression case fails.
+
+## Benchmark Gate
+
+Before accepting a new intervention, load `PRODUCT_LOOP_BENCHMARK.md` and run active regression cases matching the same surface, profile, changed files, or metric.
+
+Rules:
+- Run matching benchmark cases before judging new optimization success.
+- If any matching active case fails, verdict is `REGRESSION`.
+- Do not continue to unrelated optimization while a matching benchmark is red.
+- New failures must be classified and promoted into benchmark regression cases.
 
 ## Profile Checks
 

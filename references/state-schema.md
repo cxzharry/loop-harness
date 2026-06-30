@@ -26,6 +26,7 @@ Required sections:
 - Candidate backlog.
 - Watch list.
 - Failed attempts and do-not-retry notes.
+- Active benchmark regressions that currently block forward optimization.
 - Human decisions.
 - User confirmations.
 - Data gaps and instrumentation needs.
@@ -55,6 +56,7 @@ Promoted from stable run-log evidence. It should include:
 - Do-not-regress rules.
 - Historical failures that should become regression checks.
 - Last promoted run-log entry.
+- Regression cases with source run-log entry, error class, trigger, matching rule, owner profile, last failed, last passed, and active/retired status.
 
 ## product-loop-budget.md
 

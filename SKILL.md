@@ -97,10 +97,10 @@ Iteration loop:
 
 ```text
 for i in 1..max_iterations:
-  Discovery: refresh state, evidence, previous failures, and current product signals.
+  Discovery: refresh state, benchmark cases, previous failures, and current product signals.
   Handoff: choose or refine one bounded intervention and hypothesis.
-  Verification: run profile-specific evidence checks after action.
-  Persistence: record verdict, evidence, scores, failed attempts, and what not to retry.
+  Verification: run matching benchmark cases, then profile-specific evidence checks after action.
+  Persistence: record verdict, evidence, scores, failed attempts, benchmark promotions, and what not to retry.
   Scheduling: decide SUCCESS, NEXT_ITERATION, REPLAN, PAUSE, ESCALATE, or STOP.
 ```
 
@@ -120,6 +120,50 @@ Failure routing:
 - `verification_fail` -> next iteration targets the failed criterion.
 - `persistence_gap` -> halt and repair state/run-log before continuing.
 - `scheduling_risk` -> pause or reduce cadence.
+
+## Error-To-Benchmark Promotion
+
+Every failed iteration must become future regression protection.
+
+When verdict is `FAIL`, `REGRESSION`, `PARTIAL` with a defect, `ENV`, or `UNKNOWN`:
+1. Classify the error.
+2. Append raw evidence to `product-loop-run-log.md`.
+3. Promote durable facts to `PRODUCT_LOOP_STATE.md`.
+4. Create or update a regression case in `PRODUCT_LOOP_BENCHMARK.md`.
+5. In the next iteration, run matching active benchmark cases before any new optimization.
+
+Error classes:
+- `ui_regression`: broken visible state, layout, responsive behavior, accessibility, or user flow.
+- `runtime_error`: console error, server error, crash, failing route, or broken interaction.
+- `metric_regression`: target metric, event, funnel, or data quality worsens.
+- `content_drift`: docs/copy/spec no longer matches product behavior or source of truth.
+- `env_blocker`: local server, dependency, auth/session, data, or tool issue blocks verification.
+- `scope_regression`: intervention touched unrelated files, widened scope, or crossed a denylist.
+
+Regression case schema:
+
+```markdown
+## Regression Case: <stable-id>
+
+- Source run-log entry:
+- Error class:
+- Surface/URL:
+- Trigger condition:
+- Playwright steps:
+- Expected result:
+- Failure evidence:
+- Matching rule:
+- Owner profile:
+- Last failed:
+- Last passed:
+- Status: active | retired
+```
+
+Benchmark gate:
+- During Discovery, load `PRODUCT_LOOP_BENCHMARK.md` and select active cases whose matching rule touches the current surface/profile/files/metric.
+- During Verification, run matching benchmark cases before accepting any new intervention.
+- If an active benchmark case fails, classify the iteration as `REGRESSION`, persist the failure, and fix that case before optimizing forward.
+- Retire a benchmark case only when the product surface or requirement is intentionally removed and that decision is recorded in state.
 
 ## Phase 1: Discovery
 
@@ -211,6 +255,7 @@ After every iteration, persist before deciding the next loop action:
 2. Promote durable facts from the log into `PRODUCT_LOOP_STATE.md`: active status, next target, failed attempts, and what not to retry.
 3. Promote reusable verification into `PRODUCT_LOOP_BENCHMARK.md`: Playwright flows, commands, expected states, accepted baselines, regression checks.
 4. Keep transient noise only in the run log unless it recurs.
+5. For every failed or regressed iteration, add or update a regression case with error class, matching rule, expected result, last failed, and status.
 
 Persist failed hypotheses and what not to retry. Preserve useful learnings even when no code/docs change was made.
 

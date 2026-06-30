@@ -21,6 +21,8 @@ Append one entry per loop run.
 - Promotion:
   - State:
   - Benchmark:
+- Error classification:
+- Benchmark regression case:
 - Verdict:
 - Files changed:
 - Next scheduling decision:

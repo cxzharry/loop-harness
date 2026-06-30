@@ -31,6 +31,18 @@ INTENT_FIELDS = ["intent", "primary metric", "baseline window", "user confirmati
 PLAYWRIGHT_FIELDS = ["playwright", "url", "viewport", "flow steps", "assertions"]
 PROMOTION_FIELDS = ["promotion", "state", "benchmark"]
 BENCHMARK_FIELDS = ["known-good flows", "regression checks", "do not regress"]
+REGRESSION_CASE_FIELDS = [
+    "regression case",
+    "error class",
+    "trigger condition",
+    "expected result",
+    "failure evidence",
+    "matching rule",
+    "owner profile",
+    "last failed",
+    "last passed",
+    "status: active",
+]
 STOP_CONDITIONS = ["success", "exhausted", "plateau", "regression", "budget", "human_gate", "env", "unknown"]
 PATTERN_FILE = "product-loop-patterns.json"
 STARTER_DIRS = [
@@ -154,6 +166,14 @@ def main() -> int:
     else:
         findings.append("OK benchmark promotion fields present")
 
+    regression_case_hits = [field for field in REGRESSION_CASE_FIELDS if field in contents["benchmark"]]
+    score += min(10, len(regression_case_hits))
+    missing_regression_case_fields = sorted(set(REGRESSION_CASE_FIELDS) - set(regression_case_hits))
+    if missing_regression_case_fields:
+        findings.append(f"WARN regression case schema incomplete: {', '.join(missing_regression_case_fields)}")
+    else:
+        findings.append("OK regression case schema present")
+
     stop_hits = [condition for condition in STOP_CONDITIONS if condition in combined]
     score += min(8, len(stop_hits))
     missing_stop_conditions = sorted(set(STOP_CONDITIONS) - set(stop_hits))
@@ -210,6 +230,7 @@ def main() -> int:
         and not missing_playwright_fields
         and not missing_promotion_fields
         and not missing_benchmark_fields
+        and not missing_regression_case_fields
         and not missing_stop_conditions
         and has_state_activity
         and has_run_log_entries

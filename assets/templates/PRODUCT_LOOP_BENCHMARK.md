@@ -19,6 +19,23 @@ Promote stable evidence from `product-loop-run-log.md` after each iteration.
 - Source run-log entry:
 - Why it matters:
 
+## Regression Cases
+
+## Regression Case: sample-case-id
+
+- Source run-log entry:
+- Error class: ui_regression | runtime_error | metric_regression | content_drift | env_blocker | scope_regression
+- Surface/URL:
+- Trigger condition:
+- Playwright steps:
+- Expected result:
+- Failure evidence:
+- Matching rule:
+- Owner profile:
+- Last failed:
+- Last passed:
+- Status: active | retired
+
 ## Metric Baselines
 
 - Metric:
