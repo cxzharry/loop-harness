@@ -1,0 +1,4 @@
+interface:
+  display_name: "Loop Harness"
+  short_description: "Autonomous product optimization loops"
+  default_prompt: "Use $loop-harness to run a controlled product optimization loop."
