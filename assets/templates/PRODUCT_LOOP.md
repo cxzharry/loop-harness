@@ -27,6 +27,8 @@ Denylist:
 Primary checks:
 Metric/data sources:
 Browser routes:
+Playwright required for app verification: yes
+Playwright smoke flows:
 Test commands:
 
 ## Five Phase Contract

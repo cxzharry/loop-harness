@@ -10,6 +10,21 @@ Verification must be evidence-backed and profile-specific.
 - Docs/content: source-of-truth checked, link validation, generated mirrors.
 - Risk: touched files/surfaces and denylist confirmation.
 
+## Playwright Requirement For App Evaluation
+
+When a product surface is an app, route, local dev server, deployed page, or interactive prototype, verification must use Playwright rather than static code review alone.
+
+Required evidence:
+- Dev server command or deployed URL.
+- Actual URL visited.
+- Browser viewport.
+- User flow steps performed.
+- Assertions checked.
+- Console, page, or network errors if relevant.
+- Screenshot/trace path when visual or interaction quality matters.
+
+If the app cannot be started, classify as `ENV` or `UNKNOWN` and persist the blocker. Do not pass a product optimization loop without real browser evidence when the acceptance criteria depend on UI behavior.
+
 ## Reject Conditions
 
 Reject or escalate when:
@@ -24,6 +39,7 @@ Reject or escalate when:
 ### ux-product
 
 - Load the actual screen when possible.
+- Use Playwright when an app/route/prototype is available.
 - Verify primary task completion.
 - Check responsive fit and text overflow.
 - Check empty/loading/error states if relevant.
@@ -49,5 +65,6 @@ Reject or escalate when:
 ### release-readiness
 
 - Smoke core flows.
+- Use Playwright for browser-visible release flows.
 - Confirm build/test/lint result or explain why unavailable.
 - Verify rollback/escalation path.

@@ -32,3 +32,8 @@ Denylist:
 ## Budget
 
 See `product-loop-budget.md`. Scheduled loops must pause when cap is exceeded.
+
+## Browser Verification
+
+Playwright required for app verification: yes
+Playwright smoke flows:

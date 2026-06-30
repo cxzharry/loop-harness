@@ -12,6 +12,7 @@ FILES = {
     "loop": "PRODUCT_LOOP.md",
     "state": "PRODUCT_LOOP_STATE.md",
     "log": "product-loop-run-log.md",
+    "benchmark": "PRODUCT_LOOP_BENCHMARK.md",
     "budget": "product-loop-budget.md",
 }
 
@@ -27,6 +28,9 @@ GATES = ["human gate", "denylist", "kill switch", "budget"]
 BUDGET_FIELDS = ["max runs", "max iterations", "max actioning changes", "kill switch", "escalation"]
 ITERATION_FIELDS = ["execution mode", "current iteration", "target", "latest verdict", "stop condition"]
 INTENT_FIELDS = ["intent", "primary metric", "baseline window", "user confirmations"]
+PLAYWRIGHT_FIELDS = ["playwright", "url", "viewport", "flow steps", "assertions"]
+PROMOTION_FIELDS = ["promotion", "state", "benchmark"]
+BENCHMARK_FIELDS = ["known-good flows", "regression checks", "do not regress"]
 STOP_CONDITIONS = ["success", "exhausted", "plateau", "regression", "budget", "human_gate", "env", "unknown"]
 PATTERN_FILE = "product-loop-patterns.json"
 STARTER_DIRS = [
@@ -126,6 +130,30 @@ def main() -> int:
     else:
         findings.append("OK intent and metric confirmation fields present")
 
+    playwright_hits = [field for field in PLAYWRIGHT_FIELDS if field in combined]
+    score += len(playwright_hits) * 2
+    missing_playwright_fields = sorted(set(PLAYWRIGHT_FIELDS) - set(playwright_hits))
+    if missing_playwright_fields:
+        findings.append(f"WARN Playwright verification fields incomplete: {', '.join(missing_playwright_fields)}")
+    else:
+        findings.append("OK Playwright verification fields present")
+
+    promotion_hits = [field for field in PROMOTION_FIELDS if field in contents["log"]]
+    score += len(promotion_hits) * 2
+    missing_promotion_fields = sorted(set(PROMOTION_FIELDS) - set(promotion_hits))
+    if missing_promotion_fields:
+        findings.append(f"WARN log promotion fields incomplete: {', '.join(missing_promotion_fields)}")
+    else:
+        findings.append("OK run-log promotion fields present")
+
+    benchmark_hits = [field for field in BENCHMARK_FIELDS if field in contents["benchmark"]]
+    score += len(benchmark_hits) * 2
+    missing_benchmark_fields = sorted(set(BENCHMARK_FIELDS) - set(benchmark_hits))
+    if missing_benchmark_fields:
+        findings.append(f"WARN benchmark fields incomplete: {', '.join(missing_benchmark_fields)}")
+    else:
+        findings.append("OK benchmark promotion fields present")
+
     stop_hits = [condition for condition in STOP_CONDITIONS if condition in combined]
     score += min(8, len(stop_hits))
     missing_stop_conditions = sorted(set(STOP_CONDITIONS) - set(stop_hits))
@@ -179,6 +207,9 @@ def main() -> int:
         and not missing_budget_fields
         and not missing_iteration_fields
         and not missing_intent_fields
+        and not missing_playwright_fields
+        and not missing_promotion_fields
+        and not missing_benchmark_fields
         and not missing_stop_conditions
         and has_state_activity
         and has_run_log_entries

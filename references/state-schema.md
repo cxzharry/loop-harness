@@ -13,6 +13,7 @@ Purpose:
 - Execution mode and run-until-done limits when applicable.
 - Human gates and denylist.
 - Verification commands and data sources.
+- Playwright command/route expectations when app verification is required.
 - Budget and kill switch pointer.
 
 ## PRODUCT_LOOP_STATE.md
@@ -38,10 +39,22 @@ Append-only. Each entry includes:
 - Discovery signals.
 - Selected intervention.
 - Verification evidence.
+- Playwright URL, viewport, flow steps, assertions, screenshots/traces when app verification was needed.
 - Verdict.
 - Files changed or no-change reason.
 - Next scheduling decision.
 - Iteration state for run-until-done loops.
+- Promotion notes: what moved into state and benchmark.
+
+## PRODUCT_LOOP_BENCHMARK.md
+
+Promoted from stable run-log evidence. It should include:
+- Known-good product flows and Playwright steps.
+- Recurring smoke assertions.
+- Baseline metrics or accepted proxy evidence.
+- Do-not-regress rules.
+- Historical failures that should become regression checks.
+- Last promoted run-log entry.
 
 ## product-loop-budget.md
 

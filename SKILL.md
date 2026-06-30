@@ -52,6 +52,7 @@ Do not ask when a safe default exists. Instead, record the assumption in `PRODUC
    - `PRODUCT_LOOP.md`
    - `PRODUCT_LOOP_STATE.md`
    - `product-loop-run-log.md`
+   - `PRODUCT_LOOP_BENCHMARK.md`
    - `product-loop-budget.md`
 4. If artifacts are missing and the user wants an ongoing loop, scaffold from `assets/templates/`.
 5. Select one or more optimization profiles. See `references/profiles.md`.
@@ -178,6 +179,13 @@ Use profile-specific verification from `references/verification.md`. Typical che
 - Metric query, event validation, funnel sanity check.
 - Content clarity review, link validation, PRD/prototype alignment.
 
+If verification requires launching or inspecting an app, use Playwright for real browser evaluation:
+- Discover the dev server command and target URL from the repo.
+- Start or reuse the local server and record the URL.
+- Use Playwright to navigate the actual route, exercise the primary flow, and inspect visible states.
+- Capture evidence: viewport, steps, assertions, errors, console/network failures when relevant, and screenshots or traces when useful.
+- If Playwright or the app server cannot run, verdict is `UNKNOWN` or `ENV`; do not mark `PASS` from static inspection alone.
+
 Rules:
 - The implementer cannot mark its own work done without evidence.
 - If verification cannot run, mark `ESCALATE_HUMAN` or `NEEDS_INSTRUMENTATION`.
@@ -196,6 +204,13 @@ Write durable state outside the conversation.
 Update:
 - `PRODUCT_LOOP_STATE.md`: current opportunities, selected intervention, status, failed attempts, human decisions, next action.
 - `product-loop-run-log.md`: append-only run summary with timestamp, profile, signals, action, verification, verdict, next schedule decision.
+- `PRODUCT_LOOP_BENCHMARK.md`: promoted checks, known-good evidence, recurring smoke flows, and do-not-regress rules derived from run logs.
+
+After every iteration, persist before deciding the next loop action:
+1. Append the raw iteration result to `product-loop-run-log.md`.
+2. Promote durable facts from the log into `PRODUCT_LOOP_STATE.md`: active status, next target, failed attempts, and what not to retry.
+3. Promote reusable verification into `PRODUCT_LOOP_BENCHMARK.md`: Playwright flows, commands, expected states, accepted baselines, regression checks.
+4. Keep transient noise only in the run log unless it recurs.
 
 Persist failed hypotheses and what not to retry. Preserve useful learnings even when no code/docs change was made.
 
@@ -231,9 +246,10 @@ End each run with:
 
 ### Verification
 <commands/checks/data sources, verdict>
+<Playwright URL, flow steps, assertions, screenshots/traces when app verification was needed>
 
 ### Persistence
-<files updated or reason not updated>
+<run-log append, state promotions, benchmark promotions, or reason not updated>
 
 ### Scheduling
 <next action and rationale>

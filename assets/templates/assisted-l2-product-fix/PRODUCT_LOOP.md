@@ -29,5 +29,7 @@ Denylist:
 ## Verification
 
 Browser routes:
+Playwright required for app verification: yes
+Playwright smoke flows:
 Test commands:
 Metric/data sources:
