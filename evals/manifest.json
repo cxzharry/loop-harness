@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "minimum_case_score": 8.0,
+  "cases": [
+    {
+      "id": "missing_metric_run_until_done",
+      "critical": true,
+      "description": "Metric-based run-until-done must confirm metric, baseline, target, and sample/proxy evidence before actioning.",
+      "transcript": "missing_metric_run_until_done.md",
+      "required_patterns": [
+        "\\bIntent\\b[\\s\\S]{0,120}\\bMETRIC_OPTIMIZE\\b",
+        "\\bprimary metric\\b",
+        "\\bbaseline window\\b",
+        "\\btarget (threshold|score|minimum|min)\\b",
+        "\\bAskUserQuestion\\b|\\buser confirmation\\b|\\bconfirm\\b",
+        "\\brun-until-done\\b",
+        "\\bUNKNOWN\\b|\\bINSTRUMENT\\b|\\breport-only\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bPASS\\b[\\s\\S]{0,160}\\bwithout\\b[\\s\\S]{0,80}\\bmetric\\b"
+      ]
+    },
+    {
+      "id": "ui_requires_playwright",
+      "critical": true,
+      "description": "App, route, or prototype verification must use Playwright or return ENV/UNKNOWN.",
+      "transcript": "ui_requires_playwright.md",
+      "required_patterns": [
+        "\\bPlaywright\\b",
+        "\\bURL\\b|\\broute\\b|\\blocalhost\\b",
+        "\\bviewport\\b",
+        "\\bflow steps\\b|\\bnavigate\\b|\\bclicked\\b|\\bassertions\\b",
+        "\\bconsole\\b|\\bnetwork\\b|\\bscreenshot\\b|\\btrace\\b|\\bassertions\\b",
+        "\\bPASS\\b|\\bENV\\b|\\bUNKNOWN\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bPASS\\b[\\s\\S]{0,240}\\bstatic (review|inspection)\\b",
+        "\\bno Playwright\\b[\\s\\S]{0,120}\\bPASS\\b"
+      ]
+    },
+    {
+      "id": "failed_iteration_promotes_benchmark",
+      "critical": true,
+      "description": "Failed or regressed iterations must become durable benchmark protection.",
+      "transcript": "failed_iteration_promotes_benchmark.md",
+      "required_patterns": [
+        "\\bVerdict\\b[\\s\\S]{0,80}\\bFAIL\\b|\\bREGRESSION\\b|\\bPARTIAL\\b|\\bENV\\b|\\bUNKNOWN\\b",
+        "\\berror classification\\b|\\bui_regression\\b|\\bruntime_error\\b|\\bmetric_regression\\b|\\bcontent_drift\\b|\\benv_blocker\\b|\\bscope_regression\\b",
+        "\\bproduct-loop-run-log\\.md\\b",
+        "\\bPRODUCT_LOOP_STATE\\.md\\b",
+        "\\bPRODUCT_LOOP_BENCHMARK\\.md\\b",
+        "\\bRegression Case\\b",
+        "\\bmatching rule\\b",
+        "\\bStatus\\b[\\s\\S]{0,40}\\bactive\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bFAIL\\b[\\s\\S]{0,240}\\bBenchmark regression case\\b[\\s\\S]{0,80}\\bnone\\b"
+      ]
+    },
+    {
+      "id": "active_benchmark_blocks_forward",
+      "critical": true,
+      "description": "A matching active benchmark case must run before new optimization and block forward work on failure.",
+      "transcript": "active_benchmark_blocks_forward.md",
+      "required_patterns": [
+        "\\bactive benchmark\\b|\\bmatching active\\b",
+        "\\bmatching rule\\b",
+        "\\bbefore\\b[\\s\\S]{0,100}\\boptimization\\b|\\bbefore\\b[\\s\\S]{0,100}\\baccept",
+        "\\bBenchmark verdict\\b",
+        "\\bREGRESSION\\b|\\bPASS\\b",
+        "\\bfix that case\\b|\\bblocks forward\\b|\\bdo not continue\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bignored\\b[\\s\\S]{0,120}\\bbenchmark\\b",
+        "\\bPASS\\b[\\s\\S]{0,200}\\bbenchmark\\b[\\s\\S]{0,80}\\bnot run\\b"
+      ]
+    },
+    {
+      "id": "parallel_agents_independent",
+      "critical": true,
+      "description": "Parallel agents are allowed only for independent domains and must produce durable handoff plus integrated verification.",
+      "transcript": "parallel_agents_independent.md",
+      "required_patterns": [
+        "\\bindependent domain\\b|\\bindependence rationale\\b",
+        "\\bparallel-agents\\b|\\bparallel agents\\b",
+        "\\bAGENT_HANDOFF\\.md\\b|\\bagent-tasks/",
+        "\\bscope\\b[\\s\\S]{0,120}\\bconstraints\\b",
+        "\\bexpected output\\b",
+        "\\bverification command\\b",
+        "\\bconflict review\\b",
+        "\\bintegrated verification\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bparallel\\b[\\s\\S]{0,160}\\bsame file\\b[\\s\\S]{0,120}\\bno conflict\\b",
+        "\\bPASS\\b[\\s\\S]{0,200}\\bagent summary\\b[\\s\\S]{0,80}\\balone\\b"
+      ]
+    },
+    {
+      "id": "worktree_isolation",
+      "critical": true,
+      "description": "File-changing parallel agents must use safe worktree isolation or persist a blocker and fall back safely.",
+      "transcript": "worktree_isolation.md",
+      "required_patterns": [
+        "\\bworktree\\b",
+        "\\bexisting\\b[\\s\\S]{0,80}\\blinked worktree\\b|\\bGIT_DIR\\b|\\bgit rev-parse --git-dir\\b",
+        "\\bsubmodule\\b",
+        "\\bnative worktree\\b|\\bgit worktree\\b",
+        "\\bcheck-ignore\\b|\\.worktrees/",
+        "\\bworktree-map\\.md\\b",
+        "\\bblocked\\b|\\bsequential\\b|\\breport-only\\b|\\bintegration decision\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bgit worktree add\\b[\\s\\S]{0,160}\\bwithout\\b[\\s\\S]{0,80}\\bcheck-ignore\\b",
+        "\\bnested worktree\\b"
+      ]
+    }
+  ]
+}

@@ -377,6 +377,12 @@ python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-or-folder>
 python3 <skill-dir>/scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d
 ```
 
+When validating loop-harness behavior against real pressure-test transcripts, run:
+
+```bash
+python3 <skill-dir>/evals/run_pressure_eval.py --transcripts <transcript-dir>
+```
+
 For skill package validation, run:
 
 ```bash
