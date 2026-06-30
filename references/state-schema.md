@@ -16,6 +16,7 @@ Purpose:
 - Playwright command/route expectations when app verification is required.
 - Execution strategy: single-agent, sequential-agents, or parallel-agents.
 - Agent handoff and worktree-map pointers when actioning work may be split.
+- Run-until-done target, target minimum, safety budget, plateau patience, and stop conditions.
 - Budget and kill switch pointer.
 
 ## PRODUCT_LOOP_STATE.md
@@ -66,7 +67,8 @@ Promoted from stable run-log evidence. It should include:
 
 Required fields:
 - Max runs per day/week.
-- Max iterations per opportunity.
+- Optional max iterations per opportunity when the user requests a hard cap.
+- Default plateau patience.
 - Max actioning changes per run.
 - Max subagent/tool-heavy checks per run.
 - Token or time budget.

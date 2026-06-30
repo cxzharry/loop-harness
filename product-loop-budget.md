@@ -2,7 +2,8 @@
 
 Max runs per day: 3
 Max runs per week: 10
-Max iterations per opportunity: 3
+Max iterations per opportunity: unset by default; run until done unless a safety budget or stop condition fires
+Default plateau patience: 3 iterations without meaningful improvement
 Max actioning changes per run: 1
 Max subagent/tool-heavy checks per run: 4
 Token or time budget: 120000 tokens or 60 minutes

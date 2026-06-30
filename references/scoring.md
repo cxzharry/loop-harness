@@ -55,7 +55,8 @@ Use `UNKNOWN` when data or environment prevents judgment.
 Use run-until-done only when the loop has:
 - A measurable target or locked acceptance rubric.
 - Confirmed primary metric when the target is metric-based.
-- Iteration cap or budget.
+- A safety budget or kill switch.
+- Plateau patience for repeated no-improvement iterations.
 - Stop conditions.
 - State fields for current iteration, latest verdict, and what not to retry.
 

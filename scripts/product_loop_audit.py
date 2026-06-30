@@ -28,7 +28,8 @@ PROFILES = [
     "release-readiness",
 ]
 GATES = ["human gate", "denylist", "kill switch", "budget"]
-BUDGET_FIELDS = ["max runs", "max iterations", "max actioning changes", "kill switch", "escalation"]
+BUDGET_FIELDS = ["max runs", "max actioning changes", "kill switch", "escalation"]
+RUN_UNTIL_DONE_BUDGET_FIELDS = ["plateau patience", "token", "time budget", "wall-clock", "kill switch"]
 ITERATION_FIELDS = ["execution mode", "current iteration", "target", "latest verdict", "stop condition"]
 INTENT_FIELDS = ["intent", "primary metric", "baseline window", "user confirmations"]
 PLAYWRIGHT_FIELDS = ["playwright", "url", "viewport", "flow steps", "assertions"]
@@ -205,6 +206,20 @@ def main() -> int:
     else:
         findings.append("OK budget fields cover caps, kill switch, and escalation")
 
+    run_until_done_budget_hits = [field for field in RUN_UNTIL_DONE_BUDGET_FIELDS if field in contents["budget"] or field in combined]
+    score += min(6, len(run_until_done_budget_hits) * 2)
+    has_plateau_patience = "plateau patience" in combined
+    has_safety_budget = any(field in combined for field in ["token", "time budget", "wall-clock", "kill switch"])
+    missing_run_until_done_budget_fields = []
+    if not has_plateau_patience:
+        missing_run_until_done_budget_fields.append("plateau patience")
+    if not has_safety_budget:
+        missing_run_until_done_budget_fields.append("safety budget or kill switch")
+    if missing_run_until_done_budget_fields:
+        findings.append(f"WARN run-until-done safety fields incomplete: {', '.join(missing_run_until_done_budget_fields)}")
+    else:
+        findings.append("OK run-until-done safety budget and plateau patience present")
+
     iteration_hits = [field for field in ITERATION_FIELDS if field in combined]
     score += len(iteration_hits) * 2
     missing_iteration_fields = sorted(set(ITERATION_FIELDS) - set(iteration_hits))
@@ -328,6 +343,7 @@ def main() -> int:
         and not missing_phases
         and not missing_gates
         and not missing_budget_fields
+        and not missing_run_until_done_budget_fields
         and not missing_iteration_fields
         and not missing_intent_fields
         and not missing_playwright_fields

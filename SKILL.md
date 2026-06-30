@@ -73,9 +73,9 @@ There is no `action-once` mode. Any loop that changes files, product behavior, d
 
 `run-until-done` requires:
 - A measurable target or acceptance rubric.
-- `max_iterations` or explicit token/wall-clock budget.
+- Explicit token/wall-clock budget, kill switch, or other safety budget.
 - `target_min` or minimum acceptable verification bar.
-- Stop conditions and human gates written to state before actioning.
+- Stop conditions, plateau patience, and human gates written to state before actioning.
 
 If these are missing, ask for the missing decision or infer a conservative default. If the missing decision cannot be resolved safely, downgrade to `report-only`; do not action work without a run-until-done target and stop conditions.
 
@@ -121,14 +121,15 @@ Parallel execution cannot mark the loop `PASS` until integration evidence exists
 In `run-until-done`, each iteration must execute all five phases. Do not loop only the implementation step.
 
 Default limits:
-- `max_iterations=3` unless the user provides a different limit.
+- Default execution is `until-done`: continue until success or a stop condition fires.
 - `target=PASS` for binary verification, or `target_score=8/10` for rubric-based verification.
-- Stop early on human gate, budget cap, environment blocker, regression, or repeated plateau.
+- Default plateau patience is 3 consecutive iterations with no meaningful evidence improvement.
+- Stop early on human gate, budget cap, environment blocker, regression, or plateau.
 
 Iteration loop:
 
 ```text
-for i in 1..max_iterations:
+while stop condition has not fired:
   Discovery: refresh state, benchmark cases, previous failures, and current product signals.
   Handoff: choose or refine one bounded intervention and hypothesis; decide single-agent vs parallel execution and worktree isolation.
   Verification: run matching benchmark cases, then profile-specific evidence checks after action.
@@ -138,8 +139,8 @@ for i in 1..max_iterations:
 
 Stop conditions:
 - `SUCCESS`: verification verdict is `PASS`, or every locked rubric criterion meets target.
-- `EXHAUSTED`: iteration limit reached.
-- `PLATEAU`: two consecutive iterations show no meaningful evidence improvement.
+- `EXHAUSTED`: explicit user-provided iteration cap, token budget, wall-clock budget, or change budget reached.
+- `PLATEAU`: plateau patience is exhausted after repeated iterations show no meaningful evidence improvement.
 - `REGRESSION`: product quality, tests, or target metric worsens materially.
 - `BUDGET`: token/time/change cap exceeded.
 - `HUMAN_GATE`: approval is required.

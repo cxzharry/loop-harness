@@ -1,7 +1,8 @@
 # Product Loop Budget
 
 Max runs per day:
-Max iterations per opportunity:
+Max iterations per opportunity: unset by default; run until done unless a safety budget or stop condition fires
+Default plateau patience: 3 iterations without meaningful improvement
 Max actioning changes per run:
 Max verification-heavy checks per run:
 Max tokens or wall time:
@@ -12,5 +13,5 @@ Escalation owner/inbox:
 
 - Exit early when no actionable signal exists.
 - Do not run actioning changes when a human gate is triggered.
-- Stop run-until-done when max iterations, budget, plateau, regression, or environment blocker fires.
+- Stop run-until-done when success, explicit iteration cap, budget, plateau, regression, human gate, or environment blocker fires.
 - Pause scheduled loops when budget is exceeded.

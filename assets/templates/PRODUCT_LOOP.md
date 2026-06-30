@@ -60,7 +60,8 @@ Primary metric:
 Baseline window:
 Target:
 Target minimum:
-Max iterations:
+Iteration budget: until-done
+Plateau patience: 3 iterations without meaningful improvement
 Stop conditions: SUCCESS, EXHAUSTED, PLATEAU, REGRESSION, BUDGET, HUMAN_GATE, ENV, UNKNOWN
 
 ## Kill Switch

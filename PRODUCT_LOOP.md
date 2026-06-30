@@ -81,7 +81,8 @@ Primary metric: pressure benchmark case score
 Baseline window: current repository state before eval scaffold
 Target: all critical pressure cases score `>=8/10`
 Target minimum: 8/10
-Max iterations: 3
+Iteration budget: until-done
+Plateau patience: 3 iterations without meaningful improvement
 Stop conditions: SUCCESS, EXHAUSTED, PLATEAU, REGRESSION, BUDGET, HUMAN_GATE, ENV, UNKNOWN
 
 ## Kill Switch

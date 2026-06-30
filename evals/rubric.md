@@ -21,7 +21,7 @@ The suite passes only when every critical case scores at least `8/10` and no cri
 - Verification uses evidence appropriate to the profile; app/prototype verification uses Playwright.
 - Matching active benchmark cases run before accepting new optimization.
 - Failed or regressed iterations append a run-log entry, classify the error, update state, and create or update an active benchmark case.
-- Run-until-done has a target, max iterations or budget, stop conditions, and a score or verdict.
+- Run-until-done has a target, safety budget, plateau patience, stop conditions, and a score or verdict.
 - Parallel execution is used only for independent domains and includes handoff, worktree mapping, conflict review, and integrated verification.
 
 ## Critical Failures
