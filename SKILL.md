@@ -162,6 +162,7 @@ python3 <skill-dir>/scripts/product_loop_cost.py --pattern daily-product-triage 
 python3 <skill-dir>/scripts/select_benchmarks.py --repo <product-repo-root> --profile ux-product --intent UX_OPTIMIZE --surface web-route --include-skill
 python3 <skill-dir>/scripts/select_knowledge.py --repo <product-repo-root> --profile ux-product --intent UX_OPTIMIZE --surface web-route
 python3 <skill-dir>/benchmark/run_pressure_eval.py --transcripts <skill-dir>/benchmark/fixtures/pass
+python3 <skill-dir>/benchmark/test_tooling_regressions.py
 python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py <skill-dir>
 ```
 

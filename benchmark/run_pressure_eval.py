@@ -146,7 +146,7 @@ def score_case(case: dict[str, Any], transcript_dir: Path) -> dict[str, Any]:
     }
 
 
-def run_agent_case(case: dict[str, Any], command: str, output_dir: Path) -> Path:
+def run_agent_case(case: dict[str, Any], command: str, output_dir: Path) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     case_file = BENCHMARK_DIR / "cases" / f"{case['id']}.md"
     transcript_path = output_dir / case["transcript"]
@@ -164,7 +164,11 @@ def run_agent_case(case: dict[str, Any], command: str, output_dir: Path) -> Path
         check=False,
     )
     transcript_path.write_text(completed.stdout, encoding="utf-8")
-    return transcript_path
+    return {
+        "case_id": case["id"],
+        "returncode": completed.returncode,
+        "transcript": str(transcript_path),
+    }
 
 
 def main() -> int:
@@ -196,10 +200,19 @@ def main() -> int:
 
     if args.agent_command:
         generated_dir = Path(args.generated_transcripts)
-        for case in cases:
-            run_agent_case(case, args.agent_command, generated_dir)
+        agent_runs = {
+            run_result["case_id"]: run_result
+            for case in cases
+            for run_result in [run_agent_case(case, args.agent_command, generated_dir)]
+        }
         transcript_dir = generated_dir
         results = [score_case(case, transcript_dir) for case in cases]
+        for result in results:
+            agent_run = agent_runs.get(result["id"], {})
+            returncode = int(agent_run.get("returncode", 0))
+            result["agent_returncode"] = returncode
+            if returncode != 0:
+                result["missing"].append(f"agent command failed with exit code {returncode}")
 
     suite_pass = True
     total = 0.0

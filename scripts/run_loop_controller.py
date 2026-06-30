@@ -13,7 +13,8 @@ from pathlib import Path
 
 
 DEFAULT_ARTIFACT_DIR = ".loop-harness"
-PASS_RE = re.compile(r"\b(verdict\s*[:=]\s*)?PASS\b", re.IGNORECASE)
+PASS_LINE_RE = re.compile(r"^\s*PASS\s*$", re.IGNORECASE)
+PASS_VERDICT_LINE_RE = re.compile(r"^\s*verdict\s*[:=]\s*PASS\b", re.IGNORECASE)
 SCORE_RE = re.compile(r"\b(?:score|metric)\s*[:=]\s*(-?\d+(?:\.\d+)?)\b", re.IGNORECASE)
 
 
@@ -46,6 +47,51 @@ def extract_score(output: str) -> float | None:
     return float(matches[-1])
 
 
+def output_has_pass_verdict(output: str) -> bool:
+    return any(PASS_LINE_RE.search(line) or PASS_VERDICT_LINE_RE.search(line) for line in output.splitlines())
+
+
+def one_line(value: str) -> str:
+    compact = re.sub(r"\s+", " ", value.strip())
+    return compact[:500] if compact else "none"
+
+
+def append_regression_case(
+    benchmark_path: Path,
+    *,
+    case_id: str,
+    timestamp: str,
+    profile: str,
+    command: str,
+    output: str,
+    stop: str,
+) -> None:
+    benchmark_path.parent.mkdir(parents=True, exist_ok=True)
+    evidence = one_line(output)
+    block = f"""
+
+## Regression Case: {case_id}
+
+- Source run-log entry: {timestamp}
+- Error class: scope_regression
+- Surface/URL: command-backed loop
+- Trigger condition: controller command stopped with {stop}
+- Playwright steps: not_applicable
+- Expected result: command reaches explicit PASS verdict or target score before stop condition
+- Failure evidence: {evidence}
+- Matching rule: rerun `{command}` when profile={profile} or command-backed loop behavior changes
+- Owner profile: {profile}
+- Last failed: {timestamp}
+- Last passed:
+- Status: active
+"""
+    current = benchmark_path.read_text(encoding="utf-8") if benchmark_path.exists() else "# Product Loop Benchmark\n"
+    if f"## Regression Case: {case_id}" in current:
+        return
+    with benchmark_path.open("a", encoding="utf-8") as handle:
+        handle.write(block)
+
+
 def append_log(
     log_path: Path,
     *,
@@ -60,13 +106,25 @@ def append_log(
     log_path.parent.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     digest = hashlib.sha1(f"{timestamp}:{iteration}:{verdict}:{output}".encode("utf-8")).hexdigest()[:10]
-    safe_output = output.strip() or "no output"
+    safe_output = one_line(output)
     stopped_failure = verdict != "PASS" and stop != "run_again_now"
     error_class = "scope_regression" if stopped_failure else "none"
     finding_status = "promoted" if stopped_failure else "not_applicable"
     promotion_decision = "promoted" if stopped_failure else "not_promoted"
     promotion_status = "active" if stopped_failure else "not_applicable"
     benchmark_case_id = f"controller-{digest}" if stopped_failure else "not_applicable"
+    severity = "medium" if stopped_failure else "none"
+    benchmark_promoted = f"PRODUCT_LOOP_BENCHMARK.md#{benchmark_case_id}" if stopped_failure else "not_applicable"
+    if stopped_failure:
+        append_regression_case(
+            log_path.parent / "PRODUCT_LOOP_BENCHMARK.md",
+            case_id=benchmark_case_id,
+            timestamp=timestamp,
+            profile=profile,
+            command=command,
+            output=output,
+            stop=stop,
+        )
     entry = f"""
 ### {timestamp}
 
@@ -97,7 +155,7 @@ def append_log(
 - Evidence: {safe_output}
 - Root cause/hypothesis: command output determines loop state
 - Reproduction steps: rerun `{command}` from {log_path.parent.parent}
-- Severity: none
+- Severity: {severity}
 - Confidence: high
 - Status: {finding_status}
 
@@ -110,7 +168,7 @@ def append_log(
 - Verification command: {command}
 - Status: {promotion_status}
 - State promoted: stop={stop}
-- Benchmark promoted: not_applicable
+- Benchmark promoted: {benchmark_promoted}
 """
     with log_path.open("a", encoding="utf-8") as handle:
         handle.write(entry)
@@ -160,7 +218,7 @@ def main() -> int:
         completed = run_command(args.command, repo, iteration)
         output = completed.stdout
         score = extract_score(output)
-        passed = completed.returncode == 0 and PASS_RE.search(output) is not None
+        passed = completed.returncode == 0 and output_has_pass_verdict(output)
         if args.target_score is not None and score is not None:
             passed = completed.returncode == 0 and score >= args.target_score
 

@@ -15,6 +15,18 @@ SKILL_DIR = SCRIPT_DIR.parent
 DEFAULT_ARTIFACT_DIR = ".loop-harness"
 CASE_RE = re.compile(r"^##\s+Regression Case:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
 FIELD_RE = re.compile(r"^-\s*([^:]+):\s*(.*?)\s*$", re.MULTILINE)
+STOPWORDS = {
+    "benchmark",
+    "case",
+    "harness",
+    "loop",
+    "optimize",
+    "optimization",
+    "product",
+    "pressure",
+    "repo",
+    "skill",
+}
 
 
 def resolve_artifact_root(repo: Path) -> Path:
@@ -25,7 +37,11 @@ def resolve_artifact_root(repo: Path) -> Path:
 
 def words(*values: str) -> set[str]:
     joined = " ".join(value for value in values if value)
-    return {part for part in re.split(r"[^a-z0-9_.:/-]+", joined.lower()) if part}
+    return {
+        part
+        for part in re.split(r"[^a-z0-9]+", joined.lower())
+        if part and part not in STOPWORDS
+    }
 
 
 def parse_regression_cases(path: Path) -> list[dict[str, Any]]:
@@ -87,7 +103,12 @@ def load_skill_cases() -> list[dict[str, Any]]:
     return cases
 
 
-def score_case(case: dict[str, Any], query_terms: set[str], critical_only: bool) -> dict[str, Any]:
+def score_case(
+    case: dict[str, Any],
+    query_terms: set[str],
+    critical_only: bool,
+    include_critical_safety: bool,
+) -> dict[str, Any]:
     haystack = words(
         str(case.get("id", "")),
         str(case.get("owner_profile", "")),
@@ -97,9 +118,11 @@ def score_case(case: dict[str, Any], query_terms: set[str], critical_only: bool)
     )
     overlap = sorted(haystack & query_terms)
     score = len(overlap)
-    if critical_only and not case.get("critical", False) and case.get("type") == "skill-pressure":
-        score = -1
-    selected = score > 0 or (case.get("critical", False) and case.get("type") == "skill-pressure")
+    is_critical = bool(case.get("critical", False))
+    if critical_only and not is_critical:
+        selected = False
+    else:
+        selected = score > 0 or (include_critical_safety and is_critical and case.get("type") == "skill-pressure")
     enriched = dict(case)
     enriched["score"] = score
     enriched["matched_terms"] = overlap
@@ -116,6 +139,11 @@ def main() -> int:
     parser.add_argument("--metric", default="")
     parser.add_argument("--files", nargs="*", default=[])
     parser.add_argument("--include-skill", action="store_true")
+    parser.add_argument(
+        "--include-critical-safety",
+        action="store_true",
+        help="Include all critical skill-pressure cases even when they do not match the query.",
+    )
     parser.add_argument("--critical-only", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--require", action="store_true")
@@ -130,7 +158,10 @@ def main() -> int:
         cases.extend(load_skill_cases())
     selected = [
         scored
-        for scored in (score_case(case, query_terms, args.critical_only) for case in cases)
+        for scored in (
+            score_case(case, query_terms, args.critical_only, args.include_critical_safety)
+            for case in cases
+        )
         if scored["selected"]
     ]
     selected.sort(key=lambda item: (item["score"], bool(item.get("critical"))), reverse=True)

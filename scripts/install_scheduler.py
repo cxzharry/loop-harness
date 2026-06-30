@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import plistlib
 import shlex
 from pathlib import Path
 
@@ -28,6 +29,31 @@ def cadence_to_start_interval(cadence: str) -> int:
     raise ValueError(f"unsupported cadence: {cadence}")
 
 
+def cadence_to_cron(cadence: str) -> str:
+    if cadence == "hourly":
+        return "0 * * * *"
+    if cadence == "daily":
+        return "0 0 * * *"
+    if cadence == "weekly":
+        return "0 0 * * 0"
+    if cadence.endswith("m"):
+        minutes = int(cadence[:-1])
+        if not 1 <= minutes <= 59:
+            raise ValueError("minute cron cadence must be between 1m and 59m")
+        return f"*/{minutes} * * * *"
+    if cadence.endswith("h"):
+        hours = int(cadence[:-1])
+        if not 1 <= hours <= 23:
+            raise ValueError("hour cron cadence must be between 1h and 23h")
+        return f"0 */{hours} * * *"
+    if cadence.endswith("d"):
+        days = int(cadence[:-1])
+        if days != 1:
+            raise ValueError("cron day cadence supports daily only; use launchd for multi-day intervals")
+        return "0 0 * * *"
+    raise ValueError(f"unsupported cadence: {cadence}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", required=True)
@@ -44,32 +70,20 @@ def main() -> int:
 
     if args.kind == "launchd":
         path = schedule_dir / f"{args.label}.plist"
-        path.write_text(
-            f"""<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key><string>{args.label}</string>
-  <key>WorkingDirectory</key><string>{repo}</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/bin/zsh</string>
-    <string>-lc</string>
-    <string>{args.command}</string>
-  </array>
-  <key>StartInterval</key><integer>{interval}</integer>
-  <key>StandardOutPath</key><string>{repo / DEFAULT_ARTIFACT_DIR / 'schedules' / (args.label + '.out.log')}</string>
-  <key>StandardErrorPath</key><string>{repo / DEFAULT_ARTIFACT_DIR / 'schedules' / (args.label + '.err.log')}</string>
-</dict>
-</plist>
-""",
-            encoding="utf-8",
-        )
+        data = {
+            "Label": args.label,
+            "WorkingDirectory": str(repo),
+            "ProgramArguments": ["/bin/zsh", "-lc", args.command],
+            "StartInterval": interval,
+            "StandardOutPath": str(repo / DEFAULT_ARTIFACT_DIR / "schedules" / f"{args.label}.out.log"),
+            "StandardErrorPath": str(repo / DEFAULT_ARTIFACT_DIR / "schedules" / f"{args.label}.err.log"),
+        }
+        with path.open("wb") as handle:
+            plistlib.dump(data, handle)
         print(path)
     else:
         path = schedule_dir / f"{args.label}.cron"
-        minutes = max(1, interval // 60)
-        path.write_text(f"*/{minutes} * * * * cd {shlex.quote(str(repo))} && {args.command}\n", encoding="utf-8")
+        path.write_text(f"{cadence_to_cron(args.cadence)} cd {shlex.quote(str(repo))} && {args.command}\n", encoding="utf-8")
         print(path)
     return 0
 
