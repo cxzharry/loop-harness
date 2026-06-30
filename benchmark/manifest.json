@@ -180,6 +180,48 @@
         "\\bgit worktree add\\b[\\s\\S]{0,160}\\bwithout\\b[\\s\\S]{0,80}\\bcheck-ignore\\b",
         "\\bnested worktree\\b"
       ]
+    },
+    {
+      "id": "global_knowledge_selects_subset",
+      "critical": true,
+      "description": "Global local knowledge must be selected by intent/profile/surface and recorded as criteria or seeds, not loaded wholesale.",
+      "transcript": "global_knowledge_selects_subset.md",
+      "required_patterns": [
+        "\\~/.codex/loop-harness/knowledge/",
+        "\\bselect_knowledge\\.py\\b",
+        "\\bprofile\\b[\\s\\S]{0,80}\\bux-product\\b",
+        "\\bsurface\\b[\\s\\S]{0,80}\\bweb-route\\b",
+        "\\bselected criteria\\b|\\bcriteria\\b",
+        "\\bbenchmark seeds\\b|\\bseeds\\b",
+        "\\bPRODUCT_LOOP_STATE\\.md\\b",
+        "\\bsubset\\b|\\bmatching\\b",
+        "\\bfallback\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bload(ed)? all global knowledge\\b",
+        "\\bactive benchmark\\b[\\s\\S]{0,120}\\bwithout\\b[\\s\\S]{0,80}\\brepo evidence\\b"
+      ]
+    },
+    {
+      "id": "global_promotion_requires_gate",
+      "critical": true,
+      "description": "Reusable global knowledge promotion must go through a gate and candidate inbox before promoted global knowledge.",
+      "transcript": "global_promotion_requires_gate.md",
+      "required_patterns": [
+        "\\bpromote_global_knowledge\\.py\\b",
+        "\\bproduct-loop-run-log\\.md\\b",
+        "\\bFinding\\b",
+        "\\bBenchmark Promotion\\b",
+        "\\bpromotion gate\\b|\\bgate\\b",
+        "\\binbox\\b",
+        "\\bnot promoted\\b|\\breject\\b|\\bblocked\\b",
+        "\\bnoise\\b|\\benv blocker\\b|\\bdomain-specific\\b",
+        "\\b--promote\\b|\\bexplicit approval\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bwrite(s)? directly\\b[\\s\\S]{0,120}\\bpromoted/",
+        "\\bpromote(s|d)?\\b[\\s\\S]{0,120}\\bwithout\\b[\\s\\S]{0,80}\\bevidence\\b"
+      ]
     }
   ]
 }

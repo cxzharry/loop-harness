@@ -35,9 +35,10 @@ Do not ask when a safe default exists. Record the assumption in `.loop-harness/P
 4. Scaffold missing ongoing-loop artifacts into `.loop-harness/` from `assets/templates/`.
 5. Select profiles using `references/profiles.md`.
 6. Select a pattern using `references/patterns.md` and `assets/templates/product-loop-patterns.json` when cadence or recurring scope matters.
-7. Ask only unresolved metric, target, risk, or schedule decisions.
-8. Run `scripts/product_loop_audit.py <repo-root-or-.loop-harness> --min-level L2` after scaffolding or artifact changes. The audit auto-detects `<repo>/.loop-harness` when passed a repo root.
-9. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
+7. Select local global criteria/seeds when useful with `scripts/select_knowledge.py --repo <repo> --profile <profile> --intent <intent> --surface <surface>`.
+8. Ask only unresolved metric, target, risk, or schedule decisions.
+9. Run `scripts/product_loop_audit.py <repo-root-or-.loop-harness> --min-level L2` after scaffolding or artifact changes. The audit auto-detects `<repo>/.loop-harness` when passed a repo root.
+10. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
 
 ## Execution Modes
 
@@ -115,9 +116,22 @@ Error classes: `ui_regression`, `runtime_error`, `metric_regression`, `content_d
 
 Benchmark gate:
 - During Discovery, load `.loop-harness/PRODUCT_LOOP_BENCHMARK.md` and select active cases matching current surface, profile, files, or metric.
+- During Discovery, optionally select general local criteria/seeds from `~/.codex/loop-harness/knowledge/` through `scripts/select_knowledge.py`; do not load the whole global store into context.
 - During Verification, run matching active cases before accepting new intervention.
 - If an active case fails, classify as `REGRESSION`, persist it, and fix that case before optimizing forward.
 - Retire a benchmark only when the product surface or requirement is intentionally removed and recorded in state.
+
+## Global Knowledge Promotion
+
+Repo-local learning comes first. Only consider global promotion after the run-log finding and repo-local benchmark promotion exist.
+
+Use:
+
+```bash
+python3 <skill-dir>/scripts/promote_global_knowledge.py --repo <repo>
+```
+
+Default behavior writes a gated candidate to `~/.codex/loop-harness/knowledge/inbox/`. Use `--promote` only after explicit approval or review confirms the finding is generally reusable. Keep env blockers, domain-specific failures, and one-off noise repo-local.
 
 ## Output Report
 

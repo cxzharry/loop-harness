@@ -52,6 +52,7 @@ Required sections:
 - Human decisions.
 - User confirmations.
 - Data gaps and instrumentation needs.
+- Selected global/local criteria and benchmark seeds, when `select_knowledge.py` is used.
 - Next scheduled action.
 
 ## product-loop-run-log.md

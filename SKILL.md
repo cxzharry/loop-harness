@@ -29,6 +29,7 @@ Read `references/operation.md` before running a loop. Then load only the relevan
 - `references/scoring.md`: rank candidates, readiness, verdicts, and run-until-done criteria.
 - `references/verification.md`: verify interventions, Playwright/browser evidence, UX taste/slop gates, benchmark gates, and parallel-agent integration.
 - `references/state-schema.md`: create or update loop artifacts, finding schema, benchmark regression cases, handoff files, and worktree maps.
+- `references/global-knowledge.md`: load local global criteria/seeds and gate reusable finding promotion.
 - `references/failure-modes.md`: diagnose stalled, unsafe, generic, or repeating loops.
 
 ## Start Checklist
@@ -38,8 +39,14 @@ Read `references/operation.md` before running a loop. Then load only the relevan
 3. Load existing artifacts if present: `.loop-harness/PRODUCT_LOOP.md`, `.loop-harness/PRODUCT_LOOP_STATE.md`, `.loop-harness/product-loop-run-log.md`, `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`, and `.loop-harness/product-loop-budget.md`.
 4. Scaffold missing ongoing-loop artifacts into `.loop-harness/` from `assets/templates/` when needed.
 5. Select profile(s), pattern, execution mode, target, safety budget, plateau patience, stop conditions, and human gates.
-6. Ask the user only for unresolved metric, target, surface, human-gate, or schedule decisions that cannot be safely inferred.
-7. Run artifact audit after scaffold/artifact changes:
+6. Select matching local global knowledge when useful:
+
+```bash
+python3 <skill-dir>/scripts/select_knowledge.py --repo <repo> --profile <profile> --intent <intent> --surface <surface>
+```
+
+7. Ask the user only for unresolved metric, target, surface, human-gate, or schedule decisions that cannot be safely inferred.
+8. Run artifact audit after scaffold/artifact changes:
 
 ```bash
 python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-root-or-.loop-harness> --min-level L2
@@ -82,6 +89,7 @@ After every iteration:
 - Promote reusable checks or failures to `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`.
 - Update `.loop-harness/AGENT_HANDOFF.md`, `.loop-harness/agent-tasks/`, and `.loop-harness/worktree-map.md` when agents/worktrees are used.
 - Record failed hypotheses and what not to retry.
+- If a finding may be reusable beyond the repo, gate it through `scripts/promote_global_knowledge.py`; do not write runtime learning into the skill package.
 
 ## Scheduling
 
@@ -116,6 +124,7 @@ After changing loop artifacts or this skill, run the relevant gates:
 ```bash
 python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-root-or-.loop-harness> --min-level L2
 python3 <skill-dir>/scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d
+python3 <skill-dir>/scripts/select_knowledge.py --repo <product-repo-root> --profile ux-product --intent UX_OPTIMIZE --surface web-route
 python3 <skill-dir>/benchmark/run_pressure_eval.py --transcripts <skill-dir>/benchmark/fixtures/pass
 python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py <skill-dir>
 ```

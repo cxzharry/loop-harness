@@ -1,33 +1,33 @@
 # Product Loop State
 
-Last run: 2026-06-30T08:50:55Z
+Last run: 2026-06-30T10:02:11Z
 Intent: ENGINEERING_QUALITY
 Primary metric: pressure benchmark case score
 Baseline window: before `benchmark/` behavior benchmark scaffold
 Execution mode: run-until-done
-Current iteration: 9
+Current iteration: 10
 Target: all critical pressure benchmark cases score `>=8/10`
 Latest verdict: PASS
 Stop condition: SUCCESS
 
 ## Active Opportunity
 
-Standardize target-repo loop artifacts under `.loop-harness/` while preserving audit compatibility with repo-root commands.
+Add local global knowledge selection and gated promotion without writing runtime learning into the skill package.
 
 Handoff: single-agent implementation in current coordinator workspace
-Verification: repo-root `.loop-harness` auto-discovery smoke, committed pressure pass fixtures, self-loop strict L3 audit, template L2 audit without WARN/MISS, py_compile, cost smoke, skill quick_validate, source and installed validation
-Persistence: self-loop artifacts under `self/loop-runs/`, `.loop-harness` artifact-root benchmark, installed skill sync
+Verification: pressure eval with global-knowledge cases, select_knowledge smoke, promote_global_knowledge dry-run, self-loop strict L3 audit, template L2 audit, py_compile, skill quick_validate, source and installed validation
+Persistence: self-loop artifacts under `self/loop-runs/`, global-knowledge selector and promotion-gate benchmark, installed skill sync
 Scheduling: stop_success
 
 ## Execution Orchestration
 
 Execution strategy: single-agent
 Parallel domains: none for this intervention
-Agent task ids: default-loop-artifact-root
+Agent task ids: global-local-knowledge-store
 Worktree strategy: current coordinator workspace; no parallel file-changing agents used
 Integration owner: coordinator
 Conflict review: no parallel agent conflicts
-Integrated verification: repo-root auto-discovery smoke passed against a temp repo with `.loop-harness/` artifacts at 87/100 L2 and no WARN/MISS; source quick_validate pass, py_compile pass, self-loop strict audit L3 100/100, template audit L2 100/100 with no WARN/MISS, committed pressure fixture eval PASS 10/10 across 7 cases, cost smoke OK, diff check pass, installed sync pass, installed quick_validate pass, installed repo-root auto-discovery smoke pass, installed self-loop strict audit L3 100/100, installed template audit L2 100/100 with no WARN/MISS, installed committed pressure fixture eval PASS 10/10
+Integrated verification: pressure eval PASS 10/10 across 9 cases, `select_knowledge.py` returned subset fallback criteria and benchmark seeds, `promote_global_knowledge.py --dry-run` returned candidate without writing, py_compile pass for all scripts, self-loop strict audit L3 100/100, template audit L2 100/100, quick_validate pass, diff check pass
 
 ## Candidate Backlog
 
@@ -57,6 +57,8 @@ Integrated verification: repo-root auto-discovery smoke passed against a temp re
 - Do not rely on uncommitted tmpdir transcripts for pressure eval smoke validation.
 - Do not scatter target-repo loop artifacts across repo root; use `.loop-harness/` by default.
 - Do not make users pass `.loop-harness/` explicitly when audit can auto-detect it from repo root.
+- Do not write runtime learning into the skill package; keep reusable cross-repo knowledge in `~/.codex/loop-harness/knowledge/`.
+- Do not promote global knowledge directly from noisy, incomplete, env-blocked, inactive, or unreviewed findings.
 
 ## Active Benchmark Regressions
 
@@ -66,6 +68,7 @@ Integrated verification: repo-root auto-discovery smoke passed against a temp re
 - `template-placeholder-audit-no-warning`: `assets/templates` audit passes L2 without WARN/MISS while still not claiming L3 scheduled readiness.
 - `committed-pressure-pass-fixtures`: pressure eval has committed pass fixtures for all critical cases and scores 10/10.
 - `default-loop-artifact-root`: target-repo artifacts live in `.loop-harness/`, pressure transcripts require that path, and audit auto-detects it from repo root.
+- `global-local-knowledge-store`: global local criteria are selected as matching subsets, and reusable global promotion goes through inbox/gate before promoted knowledge.
 
 ## Iteration History
 
@@ -78,6 +81,7 @@ Integrated verification: repo-root auto-discovery smoke passed against a temp re
 - 2026-06-30T07:54:23Z: Reduced `SKILL.md` to an entrypoint and moved detailed operations contract to `references/operation.md`; source and installed verification passed.
 - 2026-06-30T08:01:27Z: Removed template-placeholder WARN noise and added committed pressure pass fixtures; source and installed verification passed.
 - 2026-06-30T08:50:55Z: Standardized target-repo artifacts under `.loop-harness/`, added repo-root audit auto-discovery, and updated pressure benchmarks; source and installed verification passed.
+- 2026-06-30T10:02:11Z: Added global local knowledge selection and gated promotion scripts; source verification passed.
 
 ## Human Decisions
 

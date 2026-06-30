@@ -4,6 +4,85 @@ Append one entry per loop run.
 
 ## Entries
 
+### 2026-06-30T10:02:11Z
+
+#### Raw Run Result
+
+- Profile: engineering-quality, content-docs
+- Discovery signals:
+  - User wanted a local-first mechanism where general reusable findings or benchmarks can be promoted outside repos only when they are truly reusable.
+  - Existing loop-harness had repo-local `.loop-harness/` persistence but no reader for `~/.codex/loop-harness/knowledge/`.
+  - RED pressure eval failed two new cases: global subset selection and gated global promotion.
+- Handoff:
+  - Add `scripts/select_knowledge.py` to select matching global/local criteria by profile, intent, and surface without loading the whole store.
+  - Add `scripts/promote_global_knowledge.py` to gate repo-local findings before writing candidates to `~/.codex/loop-harness/knowledge/inbox/`.
+  - Add `references/global-knowledge.md` as the one-level reference, keeping `SKILL.md` concise.
+  - Add pressure cases so future changes cannot promote noise or activate global seeds without repo-local evidence.
+- Selected intervention: global local knowledge selector and promotion gate.
+- Execution strategy: single-agent
+- Agent tasks: global-local-knowledge-store
+- Worktree map: self/loop-runs/worktree-map.md
+- Conflict review: no parallel conflicts
+- Integration verification: source validation complete before installed sync
+- Verification evidence:
+  - RED: pressure eval failed `global_knowledge_selects_subset` and `global_promotion_requires_gate` at 0/10 before fixtures/contract.
+  - GREEN: `python3 benchmark/run_pressure_eval.py --transcripts benchmark/fixtures/pass` passed 9/9 cases at 10/10.
+  - `python3 scripts/select_knowledge.py --repo /Users/haido/loop-harness --profile ux-product --intent UX_OPTIMIZE --surface web-route` returned subset matching with built-in fallback criteria and benchmark seeds.
+  - `python3 scripts/promote_global_knowledge.py --repo self/loop-runs --dry-run` returned a gated candidate and wrote nothing.
+  - `python3 -m py_compile scripts/product_loop_audit.py scripts/product_loop_cost.py scripts/select_knowledge.py scripts/promote_global_knowledge.py benchmark/run_pressure_eval.py` passed.
+  - `python3 scripts/product_loop_audit.py self/loop-runs --strict` passed at 100/100 L3.
+  - `python3 scripts/product_loop_audit.py assets/templates --min-level L2` passed at 100/100 L2.
+  - `python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/haido/loop-harness` passed.
+  - `git diff --check` passed.
+- Playwright evidence:
+  - URL: not applicable
+  - Viewport: not applicable
+  - Flow steps: not applicable
+  - Assertions: not applicable
+  - Screenshot/trace: not applicable
+- Error output: none after implementation
+- Failed assertions: none after implementation
+- Verdict: PASS
+- Files changed:
+  - `SKILL.md`
+  - `references/operation.md`
+  - `references/state-schema.md`
+  - `references/global-knowledge.md`
+  - `scripts/select_knowledge.py`
+  - `scripts/promote_global_knowledge.py`
+  - `benchmark/manifest.json`
+  - `benchmark/cases/global_knowledge_selects_subset.md`
+  - `benchmark/cases/global_promotion_requires_gate.md`
+  - `benchmark/fixtures/pass/global_knowledge_selects_subset.md`
+  - `benchmark/fixtures/pass/global_promotion_requires_gate.md`
+  - `self/loop-runs/PRODUCT_LOOP_STATE.md`
+  - `self/loop-runs/PRODUCT_LOOP_BENCHMARK.md`
+  - `self/loop-runs/product-loop-run-log.md`
+- Next scheduling decision: stop_success
+
+#### Finding
+
+- Finding id: finding-2026-06-30-global-local-knowledge-store
+- Error class: scope_regression
+- Symptom: loop-harness had repo-local learning but no controlled path for reusable cross-repo criteria or benchmark seeds.
+- Evidence: the package lacked `select_knowledge.py`, `promote_global_knowledge.py`, and `references/global-knowledge.md`; pressure tests for global selection/promotion failed before the change.
+- Root cause/hypothesis: previous iterations correctly avoided skill-package bloat but did not add the local global store reader and promotion gate needed to reuse general knowledge safely.
+- Reproduction steps: ask loop-harness to reuse `~/.codex/loop-harness/knowledge/` or promote a finding globally; before this change there was no script or contract to do it.
+- Severity: medium
+- Confidence: high
+- Status: promoted
+
+#### Benchmark Promotion
+
+- Promotion decision: promoted
+- Benchmark case id: global-local-knowledge-store
+- Matching rule: changes touch global knowledge selection, criteria packs, benchmark seeds, promotion gate, pressure cases, or persistence docs.
+- Expected result: global local knowledge is selected as a profile/intent/surface subset; global seeds stay inactive without repo-local evidence; promotion writes candidates to inbox and requires gate plus explicit `--promote` before promoted knowledge.
+- Verification command: `python3 benchmark/run_pressure_eval.py --transcripts benchmark/fixtures/pass`, `python3 scripts/select_knowledge.py ...`, and `python3 scripts/promote_global_knowledge.py --repo <repo> --dry-run`
+- Status: active
+- State promoted: local global knowledge store contract at `~/.codex/loop-harness/knowledge/`.
+- Benchmark promoted: active regression case for global subset selection and gated global promotion.
+
 ### 2026-06-30T08:50:55Z
 
 #### Raw Run Result

@@ -90,6 +90,10 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Source run-log entry: 2026-06-30T08:50:55Z
 - Why it matters: product repos should not be polluted with loose loop artifact files, and users should not need to remember the artifact subfolder path for audit.
 
+- Check: reusable cross-repo knowledge must be selected from `~/.codex/loop-harness/knowledge/` as a subset and promoted through a gate.
+- Source run-log entry: 2026-06-30T10:02:11Z
+- Why it matters: loop-harness should learn across local repos without bloating the skill package or promoting noisy repo-specific failures globally.
+
 ## Regression Cases
 
 ## Regression Case: ux-skipped-taste-slop-must-fail
@@ -212,6 +216,21 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Last passed: 2026-06-30T08:50:55Z
 - Status: active
 
+## Regression Case: global-local-knowledge-store
+
+- Source run-log entry: 2026-06-30T10:02:11Z
+- Error class: scope_regression
+- Surface/URL: `SKILL.md`, `references/global-knowledge.md`, `references/operation.md`, `references/state-schema.md`, `scripts/select_knowledge.py`, `scripts/promote_global_knowledge.py`, `benchmark/manifest.json`
+- Trigger condition: changes touch global knowledge selection, criteria packs, benchmark seeds, promotion gate, pressure cases, or persistence docs.
+- Playwright steps: not applicable
+- Expected result: `select_knowledge.py` returns only matching criteria/seeds by profile, intent, and surface; global seeds remain inactive without repo-local evidence; `promote_global_knowledge.py` writes candidates to inbox by default and requires gate plus explicit `--promote` before promoted knowledge.
+- Failure evidence: pre-fix pressure eval failed `global_knowledge_selects_subset` and `global_promotion_requires_gate` at 0/10; no selector or promotion gate script existed.
+- Matching rule: any change to global knowledge store paths, selector output, promotion gate, registry schema, pressure cases, or persistence instructions.
+- Owner profile: engineering-quality, content-docs
+- Last failed: 2026-06-30T10:02:11Z pre-fix pressure eval
+- Last passed: 2026-06-30T10:02:11Z
+- Status: active
+
 ## Regression Case: sample-case-id
 
 - Source run-log entry:
@@ -268,3 +287,6 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 
 - Rule: Audit accepts either `.loop-harness/` directly or the repo root containing `.loop-harness/`.
 - Evidence: `scripts/product_loop_audit.py`
+
+- Rule: Runtime learning must not be written into the skill package; reusable cross-repo knowledge belongs in `~/.codex/loop-harness/knowledge/` and goes through an inbox/gate.
+- Evidence: `references/global-knowledge.md`, `scripts/select_knowledge.py`, `scripts/promote_global_knowledge.py`
