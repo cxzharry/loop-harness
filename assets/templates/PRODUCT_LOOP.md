@@ -2,6 +2,7 @@
 
 Product surface:
 Optimization goal:
+Pattern: daily-product-triage
 Profiles: ux-product, engineering-quality
 Readiness level: L1 report-only
 Cadence:

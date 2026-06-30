@@ -6,6 +6,7 @@ Use these artifacts for persistent product optimization loops.
 
 Purpose:
 - Product surface and optimization goal.
+- Pattern id from `product-loop-patterns.json` when using a reusable loop.
 - Profiles enabled.
 - Cadence and rollout level.
 - Human gates and denylist.

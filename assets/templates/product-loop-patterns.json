@@ -1,0 +1,94 @@
+{
+  "patterns": [
+    {
+      "id": "daily-product-triage",
+      "name": "Daily Product Triage",
+      "goal": "Scan product, engineering, docs, and feedback signals into a prioritized optimization queue",
+      "profiles": ["ux-product", "engineering-quality", "content-docs"],
+      "cadence": "1d",
+      "risk": "low",
+      "default_level": "L1",
+      "phases": ["discovery", "handoff", "verification", "persistence", "scheduling"],
+      "human_gates": ["major-product-direction", "pricing", "auth", "payments"],
+      "cost": {
+        "tokens_noop": 5000,
+        "tokens_report": 50000,
+        "tokens_action": 180000,
+        "suggested_daily_cap": 120000,
+        "early_exit_required": false
+      }
+    },
+    {
+      "id": "ux-sweeper",
+      "name": "UX Sweeper",
+      "goal": "Improve one route, screen, or user flow with browser-backed UX evidence",
+      "profiles": ["ux-product"],
+      "cadence": "1d-1w",
+      "risk": "medium",
+      "default_level": "L2",
+      "phases": ["discovery", "handoff", "verification", "persistence", "scheduling"],
+      "human_gates": ["brand-sensitive-copy", "major-navigation-change", "pricing", "auth"],
+      "cost": {
+        "tokens_noop": 8000,
+        "tokens_report": 70000,
+        "tokens_action": 240000,
+        "suggested_daily_cap": 300000,
+        "early_exit_required": true
+      }
+    },
+    {
+      "id": "metric-instrumentation",
+      "name": "Metric Instrumentation",
+      "goal": "Make product metrics observable and trustworthy before optimization claims",
+      "profiles": ["metrics-growth", "engineering-quality"],
+      "cadence": "1w",
+      "risk": "medium",
+      "default_level": "L1",
+      "phases": ["discovery", "handoff", "verification", "persistence", "scheduling"],
+      "human_gates": ["analytics-schema-change", "privacy", "data-retention", "billing-events"],
+      "cost": {
+        "tokens_noop": 5000,
+        "tokens_report": 65000,
+        "tokens_action": 220000,
+        "suggested_daily_cap": 200000,
+        "early_exit_required": true
+      }
+    },
+    {
+      "id": "release-readiness",
+      "name": "Release Readiness",
+      "goal": "Verify changed product surfaces and release risks before shipping",
+      "profiles": ["release-readiness", "engineering-quality", "ux-product"],
+      "cadence": "on-release",
+      "risk": "medium",
+      "default_level": "L2",
+      "phases": ["discovery", "handoff", "verification", "persistence", "scheduling"],
+      "human_gates": ["destructive-migration", "secrets", "auth", "payments", "major-regression"],
+      "cost": {
+        "tokens_noop": 6000,
+        "tokens_report": 80000,
+        "tokens_action": 260000,
+        "suggested_daily_cap": 400000,
+        "early_exit_required": true
+      }
+    },
+    {
+      "id": "post-launch-learning",
+      "name": "Post Launch Learning",
+      "goal": "Turn launch metrics, feedback, support, and errors into follow-up optimization candidates",
+      "profiles": ["metrics-growth", "ux-product", "engineering-quality"],
+      "cadence": "1d-1w",
+      "risk": "low",
+      "default_level": "L1",
+      "phases": ["discovery", "handoff", "verification", "persistence", "scheduling"],
+      "human_gates": ["experiment-decision", "roadmap-priority", "pricing", "legal-copy"],
+      "cost": {
+        "tokens_noop": 5000,
+        "tokens_report": 60000,
+        "tokens_action": 200000,
+        "suggested_daily_cap": 180000,
+        "early_exit_required": false
+      }
+    }
+  ]
+}

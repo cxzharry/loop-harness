@@ -29,7 +29,9 @@ Do not skip a phase. If a phase lacks evidence, record the gap and route the run
    - `product-loop-budget.md`
 3. If artifacts are missing and the user wants an ongoing loop, scaffold from `assets/templates/`.
 4. Select one or more optimization profiles. See `references/profiles.md`.
-5. Run `scripts/product_loop_audit.py <repo-or-folder>` when artifacts exist or after scaffolding.
+5. Select a product loop pattern when cadence or recurring scope matters. See `references/patterns.md` and `assets/templates/product-loop-patterns.json`.
+6. Run `scripts/product_loop_audit.py <repo-or-folder>` when artifacts exist or after scaffolding.
+7. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
 
 ## Phase 1: Discovery
 
@@ -150,6 +152,7 @@ End each run with:
 ## References
 
 - Read `references/profiles.md` when selecting optimization profiles.
+- Read `references/patterns.md` when choosing a reusable product loop pattern.
 - Read `references/scoring.md` when ranking candidates or judging readiness.
 - Read `references/verification.md` before accepting an intervention.
 - Read `references/state-schema.md` before creating or updating loop artifacts.
@@ -161,6 +164,7 @@ After creating or changing loop artifacts, run:
 
 ```bash
 python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-or-folder>
+python3 <skill-dir>/scripts/product_loop_cost.py --pattern daily-product-triage --level L1 --cadence 1d
 ```
 
 For skill package validation, run:

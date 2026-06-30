@@ -30,6 +30,16 @@ Break ties by choosing the candidate with stronger verification evidence.
 
 Never start at L3. Run at least one L1 loop and review state before enabling actioning behavior.
 
+## Pattern Readiness
+
+A reusable product loop pattern should define:
+- `id`, `name`, `goal`, `profiles`, `cadence`, `risk`, and `default_level`.
+- All five phases: discovery, handoff, verification, persistence, scheduling.
+- Human gates.
+- Cost fields: noop, report, action, daily cap, and early-exit requirement.
+
+Use `scripts/product_loop_cost.py` before scheduling a pattern.
+
 ## Verdict Criteria
 
 Use `PASS` only when evidence matches the profile's success condition.
