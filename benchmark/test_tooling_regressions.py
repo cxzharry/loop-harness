@@ -92,6 +92,36 @@ class ToolingRegressionTests(unittest.TestCase):
             validated = run(["python3", "scripts/validate_run_log_entry.py", str(artifact_root / "product-loop-run-log.md")])
             self.assertEqual(validated.returncode, 0, validated.stdout)
 
+    def test_audit_allows_progress_partial_entries_without_promotion(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            tmp = Path(raw)
+            self.scaffold(tmp)
+            command = (
+                "python3 -c '"
+                "import os, sys; "
+                "i=int(os.environ.get(\"LOOP_ITERATION\", \"1\")); "
+                "score=6+i; "
+                "print(f\"metric={score}\"); "
+                "print(\"PASS\" if i >= 2 else \"PARTIAL\"); "
+                "sys.exit(0 if i >= 2 else 1)'"
+            )
+            completed = run(
+                [
+                    "python3",
+                    "scripts/run_loop_controller.py",
+                    "--repo",
+                    raw,
+                    "--command",
+                    command,
+                    "--target-score",
+                    "8",
+                ]
+            )
+            self.assertEqual(completed.returncode, 0, completed.stdout)
+            audited = run(["python3", "scripts/product_loop_audit.py", raw, "--min-level", "L2"])
+            self.assertEqual(audited.returncode, 0, audited.stdout)
+            self.assertIn("OK no failed iterations require active regression cases yet", audited.stdout)
+
     def test_pressure_eval_fails_when_agent_command_fails(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             completed = run(

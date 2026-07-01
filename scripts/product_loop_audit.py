@@ -231,10 +231,29 @@ def is_loop_instance_root(root: Path) -> bool:
     return has_required_artifacts(root) and not is_template_root(root)
 
 
-def has_failed_iteration(log_content: str) -> bool:
-    if VERDICT_RE.search(log_content):
-        return True
-    return any(f"latest verdict: {verdict}" in log_content for verdict in FAILURE_VERDICTS)
+def entry_blocks(log_content: str) -> list[str]:
+    matches = list(RUN_LOG_ENTRY_RE.finditer(log_content))
+    if not matches:
+        return []
+    blocks: list[str] = []
+    for index, match in enumerate(matches):
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(log_content)
+        blocks.append(log_content[match.end() : end])
+    return blocks
+
+
+def has_terminal_failed_iteration(log_content: str) -> bool:
+    for block in entry_blocks(log_content):
+        fields = {normalize_label(key): value.strip().lower() for key, value in FIELD_RE.findall(block)}
+        verdict = fields.get("verdict", "")
+        next_decision = fields.get("next scheduling decision", "")
+        if verdict in FAILURE_VERDICTS and next_decision != "run_again_now":
+            return True
+    if not entry_blocks(log_content):
+        if VERDICT_RE.search(log_content) and "next scheduling decision: run_again_now" not in log_content:
+            return True
+        return any(f"latest verdict: {verdict}" in log_content for verdict in FAILURE_VERDICTS)
+    return False
 
 
 def parse_regression_cases(benchmark_content: str) -> list[dict[str, object]]:
@@ -436,7 +455,7 @@ def main() -> int:
     else:
         findings.append("OK regression case schema present")
 
-    failed_iterations_present = has_failed_iteration(contents["log"])
+    failed_iterations_present = has_terminal_failed_iteration(contents["log"])
     real_active_regression_cases = [
         case for case in parse_regression_cases(contents["benchmark"])
         if is_real_active_regression_case(case)
