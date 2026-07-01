@@ -37,8 +37,9 @@ Do not ask when a safe default exists. Record the assumption in `.loop-harness/P
 6. Select a pattern using `references/patterns.md` and `assets/templates/product-loop-patterns.json` when cadence or recurring scope matters.
 7. Select local global criteria/seeds when useful with `scripts/select_knowledge.py --repo <repo> --profile <profile> --intent <intent> --surface <surface>`.
 8. Ask only unresolved metric, target, risk, or schedule decisions.
-9. Run `scripts/product_loop_audit.py <repo-root-or-.loop-harness> --min-level L2` after scaffolding or artifact changes. The audit auto-detects `<repo>/.loop-harness` when passed a repo root.
-10. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
+9. Plan the first iteration as an execution batch with lane decomposition before actioning.
+10. Run `scripts/product_loop_audit.py <repo-root-or-.loop-harness> --min-level L2` after scaffolding or artifact changes. The audit auto-detects `<repo>/.loop-harness` when passed a repo root.
+11. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
 
 ## Execution Modes
 
@@ -52,15 +53,43 @@ There is no `action-once` mode. Any loop that changes files, product behavior, d
 
 ## Five Phases
 
-Every iteration must execute all five phases:
+Every iteration must execute all five phases. An iteration is one planned execution batch, not necessarily one tiny fix.
 
 1. Discovery: refresh state, benchmark cases, previous failures, and current product signals.
-2. Handoff: choose one bounded intervention and hypothesis; decide single-agent, sequential-agent, or parallel-agent execution and worktree isolation.
+2. Handoff: choose one execution batch containing one or more bounded lanes, each with hypothesis, scope, risk, owner boundary, allowed files/surfaces, verification command, dependencies, and worktree plan.
 3. Verification: run matching benchmark cases first, then profile-specific checks after action.
 4. Persistence: record verdict, evidence, scores, failed attempts, benchmark promotions, agent handoffs, worktree mappings, and what not to retry.
 5. Scheduling: decide `SUCCESS`, `NEXT_ITERATION`, `REPLAN`, `PAUSE`, `ESCALATE`, or `STOP`.
 
-Find real signals before proposing work. Convert findings into one bounded intervention with impact, confidence, effort, risk, hypothesis, success evidence, rollback or escalation condition, owner boundary, allowed files/surfaces, and denylist.
+Find real signals before proposing work. Convert findings into a bounded execution batch. If multiple findings are independent, decompose them into lanes and execute them within the same iteration; do not create separate iterations just because there is more than one known lane.
+
+## Iteration Batch Planning
+
+Before implementation, classify the current batch:
+
+- `single-lane`: one concern, one owner boundary, one verification path.
+- `multi-lane`: independent lanes can run in parallel or be executed sequentially inside the same iteration.
+- `sequential`: lanes are known but have true dependencies; document the dependency and finish the sequence inside the same iteration when budget allows.
+- `discovery-only`: no safe actioning target exists yet.
+
+Each lane must define:
+- Lane id.
+- Goal and hypothesis.
+- Allowed files/surfaces and forbidden shared state.
+- Dependencies and conflict risk.
+- Owner or agent.
+- Verification command/evidence.
+- Expected output.
+
+Parallelization strategy:
+- Use parallel agents/worktrees when lanes have independent ownership and low integration risk.
+- Use one local controller for tightly coupled files, high context-transfer cost, or one-command fixes.
+- Use sequential execution inside the same iteration when lanes are independent enough to plan together but too small to justify agent dispatch.
+
+Next iteration rule:
+- Start a new iteration only after the planned batch has run integrated verification and the result is not `PASS`.
+- Do not defer known independent lanes to later iterations unless budget, human gate, conflict risk, or environment blockers are recorded.
+- If the batch fails, the next iteration targets the failed lane or failed integrated criterion, not untouched work that should have been in the original batch.
 
 ## Run-Until-Done Controller
 
@@ -85,10 +114,10 @@ Failure routing:
 
 ## Execution Orchestration
 
-Use one agent when findings share state, require one mental model, or may conflict on the same files. Use parallel agents only for independent interventions, failures, surfaces, test files, or investigation domains.
+Use one agent when findings share state, require one mental model, or may conflict on the same files. Use parallel agents only for independent lanes, interventions, failures, surfaces, test files, or investigation domains.
 
 For parallel agents:
-- Create one task per domain with scope, goal, constraints, expected output, verification command, and allowed files/surfaces.
+- Create one task per lane/domain with scope, goal, constraints, expected output, verification command, and allowed files/surfaces.
 - Record tasks in `.loop-harness/AGENT_HANDOFF.md` or `.loop-harness/agent-tasks/<task-id>.md`.
 - Require each agent to return root cause/hypothesis, changed files, verification evidence, risks, and next handoff.
 - Review conflicts before integration.
@@ -149,6 +178,7 @@ End each run with:
 Required after each iteration:
 - Run-log entry id/timestamp.
 - State fields promoted.
+- Batch type, lane ids, and parallelization rationale.
 - Error classification.
 - Benchmark cases matched before verification.
 - Benchmark verdict.

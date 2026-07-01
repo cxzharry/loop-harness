@@ -49,6 +49,7 @@ Required sections:
 - Failed attempts and do-not-retry notes.
 - Active benchmark regressions that currently block forward optimization.
 - Execution orchestration: parallel domains, agent task ids, worktree strategy, integration owner, conflict review, integrated verification.
+- Planned execution batch: batch type, lane ids, lane dependencies, parallelization rationale, integration plan, and deferred-lane rationale if any.
 - Human decisions.
 - User confirmations.
 - Data gaps and instrumentation needs.
@@ -65,6 +66,7 @@ Each entry includes:
 - Finding: finding id, error class, symptom, evidence, root cause/hypothesis, reproduction steps, severity, confidence, and status.
 - Benchmark Promotion: promotion decision, benchmark case id, matching rule, expected result, verification command, status, and what moved into state/benchmark.
 - Agent task ids, worktree map, conflict review, and integration verification when parallel agents are used.
+- Batch type, lane ids, parallelization rationale, and deferred-lane rationale when more than one lane is known.
 
 Use `Finding Status: not_applicable` and `Error class: none` for clean passing iterations. Use `Promotion decision: not_promoted` when a failure is noise, one-off, already covered, or not reproducible enough to become a benchmark.
 
@@ -100,6 +102,7 @@ Required when a loop dispatches multiple agents or needs durable handoff across 
 - Shared constraints and denylist.
 - Benchmark cases that must pass before acceptance.
 - One task entry per agent with domain, scope, goal, allowed files/surfaces, forbidden files/surfaces, required context, verification command, expected output, worktree, and status.
+- For multi-lane batches, one task entry per lane even if executed by the same local controller.
 - Agent results: summary, root cause or hypothesis, files changed, verification evidence, risks, follow-up.
 - Integration record: conflict review, integrated files, integration verification, benchmark verdict, final decision.
 

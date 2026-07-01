@@ -7,6 +7,10 @@ Use this file when a loop run dispatches multiple agents or needs durable handof
 - Run id/timestamp:
 - Loop iteration:
 - Execution strategy: single-agent | sequential-agents | parallel-agents
+- Batch type: single-lane | multi-lane | sequential | discovery-only
+- Lane ids:
+- Parallelization rationale:
+- Deferred lane rationale:
 - Integration owner:
 - Shared constraints:
 - Denylist:

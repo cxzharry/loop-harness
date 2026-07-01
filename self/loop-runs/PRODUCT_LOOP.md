@@ -55,6 +55,10 @@ Test commands:
 ## Execution Orchestration
 
 Execution strategy: single-agent
+Batch planning required before actioning: yes
+Batch types: single-lane | multi-lane | sequential | discovery-only
+Lane decomposition fields: lane id, goal, allowed files/surfaces, dependencies, verification command, owner
+Parallelization strategy: use one execution batch per iteration; include independent lanes in the same iteration when safe
 Parallel agents allowed when domains are independent: yes
 Agent handoff file: self/loop-runs/AGENT_HANDOFF.md
 Agent task directory: agent-tasks/
@@ -66,7 +70,7 @@ Conflict policy: reject or replan if generated eval files overlap with runtime s
 ## Five Phase Contract
 
 - Discovery: inspect real product signals before proposing work.
-- Handoff: choose one bounded intervention with hypothesis, scope, risk, owner boundary, execution strategy, and worktree plan.
+- Handoff: choose one execution batch with one or more bounded lanes, hypotheses, scopes, risks, owner boundaries, execution strategy, and worktree plan.
 - Verification: accept only evidence-backed checks, including integrated verification after parallel agents.
 - Persistence: update state, append the run log, update benchmark, and update handoff/worktree files.
 - Scheduling: stop, run again, schedule, pause, or escalate.

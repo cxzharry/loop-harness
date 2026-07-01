@@ -17,6 +17,7 @@ Run controlled product optimization loops with evidence. Use this skill to impro
 - Failed, regressed, partial-defect, ENV, or UNKNOWN iterations must append raw evidence plus a structured finding to `product-loop-run-log.md`, then promote durable failures into `PRODUCT_LOOP_BENCHMARK.md`.
 - Do not create separate `error-log.md`, `findings.md`, or `run-log-error.md`.
 - Run matching active benchmark cases before accepting new optimization.
+- Before actioning, plan the current iteration as an execution batch with one or more bounded lanes; do not serialize independent lanes into separate iterations.
 - Persist state before scheduling the next iteration.
 - In target repos, store persistent loop artifacts under `.loop-harness/` by default; do not scatter them across the repo root.
 
@@ -65,6 +66,17 @@ python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-root-or-.loop-ha
 
 Use `--min-level L3` for scheduled/unattended loops. Use `--strict` for CI or release gates. Hard misses such as negated evidence or missing promoted active regression cases must exit non-zero.
 
+## Planning Before Execute
+
+Before any actioning iteration, write a compact plan for the iteration as a batch:
+
+- `Batch type`: `single-lane`, `multi-lane`, `sequential`, or `discovery-only`.
+- `Lane decomposition`: lane id, goal, allowed files/surfaces, dependencies, verification command, and owner.
+- `Parallelization strategy`: which lanes can run together, which must wait, and why.
+- `Integration plan`: merge/conflict review, integrated verification, benchmark cases, and final acceptance gate.
+
+If lanes are independent, execute them in the same iteration using parallel agents/worktrees when useful, or sequentially within the same iteration when handoff cost is higher than parallel benefit. Start a new iteration only after the planned batch has integrated verification and still fails, regresses, hits a gate, or needs re-planning.
+
 ## Execution Modes
 
 - `report-only`: discover, verify signals, persist state, and stop without source changes.
@@ -87,7 +99,7 @@ python3 <skill-dir>/scripts/run_loop_controller.py --repo <repo> --benchmark-com
 
 ## Parallel Work
 
-Use a single agent unless domains are independent. If using parallel agents, record tasks in `.loop-harness/AGENT_HANDOFF.md` or `.loop-harness/agent-tasks/`, isolate file-changing work in worktrees when possible, write `.loop-harness/worktree-map.md`, review conflicts, and verify integrated work in the coordinator workspace before any `PASS`.
+Use a single agent unless domains are independent. If multiple independent lanes are known before execution, put them in the same iteration plan instead of turning each lane into its own iteration. If using parallel agents, record tasks in `.loop-harness/AGENT_HANDOFF.md` or `.loop-harness/agent-tasks/`, isolate file-changing work in worktrees when possible, write `.loop-harness/worktree-map.md`, review conflicts, and verify integrated work in the coordinator workspace before any `PASS`.
 
 ## Verification Gates
 
@@ -150,7 +162,7 @@ End each run with a concise Loop Harness Report:
 - Scheduling
 - Iteration State
 
-Include run-log timestamp, state fields promoted, error classification, matched benchmark cases, benchmark verdict, created/updated regression case id, handoff/worktree updates, and evidence retained for future regression checks.
+Include run-log timestamp, state fields promoted, error classification, matched benchmark cases, benchmark verdict, created/updated regression case id, handoff/worktree updates, and evidence retained for future regression checks. For multi-lane runs, include batch type, lane ids, parallelization rationale, integration evidence, and why any remaining work needs another iteration.
 
 ## Validation
 

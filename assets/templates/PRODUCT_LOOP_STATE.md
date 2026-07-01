@@ -22,6 +22,11 @@ Scheduling:
 ## Execution Orchestration
 
 Execution strategy:
+Batch type:
+Lane ids:
+Lane dependencies:
+Parallelization rationale:
+Deferred lane rationale:
 Parallel domains:
 Agent task ids:
 Worktree strategy:

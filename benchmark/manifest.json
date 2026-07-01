@@ -295,6 +295,34 @@
       ]
     },
     {
+      "id": "multi_lane_single_iteration_plan",
+      "critical": true,
+      "description": "Known independent lanes should be planned into one run-until-done iteration batch, not serialized into separate iterations.",
+      "transcript": "multi_lane_single_iteration_plan.md",
+      "required_patterns": [
+        "\\brun-until-done\\b",
+        "\\bBatch type\\b[\\s\\S]{0,80}\\bmulti-lane\\b|\\bBatch type\\b[\\s\\S]{0,80}\\bsequential\\b",
+        "\\bexecution batch\\b",
+        "\\bLane decomposition\\b",
+        "\\bLane id\\b[\\s\\S]{0,80}\\blane-docs-copy\\b",
+        "\\bLane id\\b[\\s\\S]{0,80}\\blane-unit-test\\b",
+        "\\bLane id\\b[\\s\\S]{0,80}\\blane-playwright-smoke\\b",
+        "\\bAllowed files/surfaces\\b",
+        "\\bDependencies\\b",
+        "\\bVerification command\\b",
+        "\\bOwner\\b",
+        "\\bParallelization strategy\\b",
+        "\\bIndependence rationale\\b",
+        "\\bIntegrated verification\\b",
+        "\\bNext iteration\\b[\\s\\S]{0,160}\\bintegrated batch verification fails\\b"
+      ],
+      "forbidden_patterns": [
+        "\\beach\\b[\\s\\S]{0,80}\\bindependent lane\\b[\\s\\S]{0,120}\\bseparate iteration\\b",
+        "\\bone bounded lane per iteration\\b",
+        "\\bdefer(s|red)?\\b[\\s\\S]{0,120}\\bindependent\\b[\\s\\S]{0,120}\\biteration 2\\b"
+      ]
+    },
+    {
       "id": "strict_run_log_validator",
       "critical": true,
       "description": "Latest run-log entry must have strict raw result, finding, and benchmark promotion fields.",

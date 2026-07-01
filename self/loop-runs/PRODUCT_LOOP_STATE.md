@@ -22,6 +22,13 @@ Scheduling: stop_success
 ## Execution Orchestration
 
 Execution strategy: single-agent
+Batch planning: required before actioning
+Batch type: single-lane for the last global-knowledge intervention; multi-lane allowed when independent lanes are known
+Lane ids: global-local-knowledge-store
+Lane dependencies: none for the last intervention
+Parallelization strategy: include known independent lanes in one iteration batch; use parallel agents/worktrees only when ownership is independent and integration risk is low
+Parallelization rationale: last intervention was tightly coupled to skill docs, scripts, and benchmark fixtures, so local controller was cheaper than splitting
+Deferred lane rationale: none; no known independent lane was deferred to a later iteration
 Parallel domains: none for this intervention
 Agent task ids: global-local-knowledge-store
 Worktree strategy: current coordinator workspace; no parallel file-changing agents used

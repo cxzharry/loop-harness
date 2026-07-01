@@ -54,6 +54,14 @@ RUN_LOG_FINDING_FIELDS = [
 BENCHMARK_FIELDS = ["known-good flows", "regression checks", "do not regress"]
 ORCHESTRATION_FIELDS = [
     "execution strategy",
+    "batch planning",
+    "batch type",
+    "lane decomposition",
+    "lane ids",
+    "lane dependencies",
+    "parallelization rationale",
+    "parallelization strategy",
+    "deferred lane rationale",
     "parallel agents",
     "agent handoff",
     "agent tasks",
@@ -96,12 +104,14 @@ NEGATED_EVIDENCE_RE = re.compile(
     r"("
     r"\b(no|missing|absent)\b[^\n]{0,80}\b("
     r"human gate|denylist|kill switch|budget|playwright|assertions|verification|promotion|benchmark|"
-    r"finding|raw run result|benchmark promotion|execution strategy|worktree map|conflict review|integration verification"
+    r"finding|raw run result|benchmark promotion|execution strategy|batch planning|batch type|lane decomposition|"
+    r"parallelization strategy|worktree map|conflict review|integration verification"
     r")\b"
     r"|"
     r"\b("
     r"human gate|denylist|kill switch|budget|playwright|assertions|verification|promotion|benchmark|"
-    r"finding|raw run result|benchmark promotion|execution strategy|worktree map|conflict review|integration verification"
+    r"finding|raw run result|benchmark promotion|execution strategy|batch planning|batch type|lane decomposition|"
+    r"parallelization strategy|worktree map|conflict review|integration verification"
     r")[^\n]{0,80}\b(not run|not executed|not filled|not available|listed but not filled|placeholder only)\b"
     r")",
     re.IGNORECASE,

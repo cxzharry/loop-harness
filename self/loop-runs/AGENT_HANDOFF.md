@@ -7,6 +7,10 @@ Use this file when a loop run dispatches multiple agents or needs durable handof
 - Run id/timestamp: 2026-06-30T04:53:51Z
 - Loop iteration: 1
 - Execution strategy: single-agent
+- Batch type: single-lane
+- Lane ids: self-behavior-benchmark-scaffold
+- Parallelization rationale: initial scaffold touched benchmark structure and self-loop artifacts as one coupled concern
+- Deferred lane rationale: none
 - Integration owner: coordinator
 - Shared constraints:
   - Keep intervention bounded to behavior benchmark support.
