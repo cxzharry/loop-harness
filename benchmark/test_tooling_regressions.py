@@ -109,6 +109,83 @@ class ToolingRegressionTests(unittest.TestCase):
             self.assertNotEqual(completed.returncode, 0, completed.stdout)
             self.assertIn("agent command failed", completed.stdout.lower())
 
+    def test_pressure_eval_blocks_plural_separate_iterations(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            transcript = Path(raw) / "multi_lane_single_iteration_plan.md"
+            transcript.write_text(
+                "\n".join(
+                    [
+                        "run-until-done",
+                        "Batch type: multi-lane",
+                        "execution batch",
+                        "Lane decomposition",
+                        "Lane id: lane-docs-copy",
+                        "Lane id: lane-unit-test",
+                        "Lane id: lane-playwright-smoke",
+                        "Allowed files/surfaces",
+                        "Dependencies",
+                        "Verification command",
+                        "Owner",
+                        "Parallelization strategy",
+                        "Independence rationale",
+                        "Integrated verification",
+                        "Next iteration only if integrated batch verification fails.",
+                        "I will treat each known independent lane as separate iterations.",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            completed = run(
+                [
+                    "python3",
+                    "benchmark/run_pressure_eval.py",
+                    "--case",
+                    "multi_lane_single_iteration_plan",
+                    "--transcripts",
+                    raw,
+                ]
+            )
+            self.assertNotEqual(completed.returncode, 0, completed.stdout)
+            self.assertIn("Forbidden hits", completed.stdout)
+
+    def test_pressure_eval_rejects_unjustified_sequential_batch_for_independent_lanes(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            transcript = Path(raw) / "multi_lane_single_iteration_plan.md"
+            transcript.write_text(
+                "\n".join(
+                    [
+                        "run-until-done",
+                        "Batch type: sequential",
+                        "execution batch",
+                        "Lane decomposition",
+                        "Lane id: lane-docs-copy",
+                        "Lane id: lane-unit-test",
+                        "Lane id: lane-playwright-smoke",
+                        "Allowed files/surfaces",
+                        "Dependencies",
+                        "Verification command",
+                        "Owner",
+                        "Parallelization strategy",
+                        "Independence rationale",
+                        "Integrated verification",
+                        "Next iteration starts if integrated batch verification fails.",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            completed = run(
+                [
+                    "python3",
+                    "benchmark/run_pressure_eval.py",
+                    "--case",
+                    "multi_lane_single_iteration_plan",
+                    "--transcripts",
+                    raw,
+                ]
+            )
+            self.assertNotEqual(completed.returncode, 0, completed.stdout)
+            self.assertIn("Missing", completed.stdout)
+
     def test_launchd_scheduler_writes_valid_plist_with_shell_operators(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             completed = run(
@@ -176,6 +253,33 @@ class ToolingRegressionTests(unittest.TestCase):
             )
             self.assertNotEqual(completed.returncode, 0, completed.stdout)
             self.assertIn("Selected 0 benchmark case", completed.stdout)
+
+    def test_l2_audit_fails_without_batch_planning_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            artifact_root = self.scaffold(Path(raw))
+            for name in ["PRODUCT_LOOP.md", "PRODUCT_LOOP_STATE.md", "AGENT_HANDOFF.md"]:
+                path = artifact_root / name
+                filtered = [
+                    line
+                    for line in path.read_text(encoding="utf-8").splitlines()
+                    if not any(
+                        marker in line.lower()
+                        for marker in [
+                            "batch planning",
+                            "batch type",
+                            "lane decomposition",
+                            "lane ids",
+                            "lane dependencies",
+                            "parallelization rationale",
+                            "parallelization strategy",
+                            "deferred lane rationale",
+                        ]
+                    )
+                ]
+                path.write_text("\n".join(filtered) + "\n", encoding="utf-8")
+            completed = run(["python3", "scripts/product_loop_audit.py", raw, "--min-level", "L2"])
+            self.assertNotEqual(completed.returncode, 0, completed.stdout)
+            self.assertIn("batch planning", completed.stdout.lower())
 
 
 if __name__ == "__main__":

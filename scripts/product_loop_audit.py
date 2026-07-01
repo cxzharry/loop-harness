@@ -70,6 +70,12 @@ ORCHESTRATION_FIELDS = [
     "conflict review",
     "integration verification",
 ]
+BATCH_PLANNING_FIELDS = [
+    "batch planning",
+    "batch type",
+    "lane decomposition",
+    "parallelization strategy",
+]
 REGRESSION_CASE_FIELDS = [
     "regression case",
     "error class",
@@ -416,6 +422,7 @@ def main() -> int:
     orchestration_hits = present_fields(combined, ORCHESTRATION_FIELDS)
     score += len(orchestration_hits) * 2
     missing_orchestration_fields = sorted(set(ORCHESTRATION_FIELDS) - set(orchestration_hits))
+    missing_batch_planning_fields = sorted(set(BATCH_PLANNING_FIELDS) - set(orchestration_hits))
     if missing_orchestration_fields:
         findings.append(f"WARN execution orchestration fields incomplete: {', '.join(missing_orchestration_fields)}")
     else:
@@ -510,6 +517,8 @@ def main() -> int:
         score = min(score, 89)
     if negated_evidence_hits:
         score = min(score, 59)
+    if missing_batch_planning_fields:
+        score = min(score, 59)
     if (
         score >= 80
         and not missing_phases
@@ -548,8 +557,12 @@ def main() -> int:
     )
     required_level = "L3" if args.strict else args.min_level
     meets_required_level = LEVEL_RANK[level] >= LEVEL_RANK[required_level]
+    missing_required_batch_planning = (
+        LEVEL_RANK[required_level] >= LEVEL_RANK["L2"]
+        and bool(missing_batch_planning_fields)
+    )
 
-    if hard_fail or (args.strict and has_warning_or_miss) or not meets_required_level:
+    if hard_fail or missing_required_batch_planning or (args.strict and has_warning_or_miss) or not meets_required_level:
         return 1 if score >= 38 else 2
     return 0
 

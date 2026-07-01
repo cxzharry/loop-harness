@@ -301,7 +301,7 @@
       "transcript": "multi_lane_single_iteration_plan.md",
       "required_patterns": [
         "\\brun-until-done\\b",
-        "\\bBatch type\\b[\\s\\S]{0,80}\\bmulti-lane\\b|\\bBatch type\\b[\\s\\S]{0,80}\\bsequential\\b",
+        "\\bBatch type\\b[\\s\\S]{0,80}\\bmulti-lane\\b",
         "\\bexecution batch\\b",
         "\\bLane decomposition\\b",
         "\\bLane id\\b[\\s\\S]{0,80}\\blane-docs-copy\\b",
@@ -317,9 +317,11 @@
         "\\bNext iteration\\b[\\s\\S]{0,160}\\bintegrated batch verification fails\\b"
       ],
       "forbidden_patterns": [
-        "\\beach\\b[\\s\\S]{0,80}\\bindependent lane\\b[\\s\\S]{0,120}\\bseparate iteration\\b",
+        "\\beach\\b[\\s\\S]{0,80}\\bindependent lane\\b[\\s\\S]{0,120}\\bseparate iteration(s)?\\b",
         "\\bone bounded lane per iteration\\b",
-        "\\bdefer(s|red)?\\b[\\s\\S]{0,120}\\bindependent\\b[\\s\\S]{0,120}\\biteration 2\\b"
+        "\\bone lane per iteration\\b",
+        "\\bserial iteration(s)?\\b",
+        "\\bdefer(s|red)?\\b[\\s\\S]{0,120}\\bindependent\\b[\\s\\S]{0,120}\\biteration(s)?\\b"
       ]
     },
     {
