@@ -44,7 +44,22 @@ class ToolingRegressionTests(unittest.TestCase):
 
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("$loop-harness", readme)
+        self.assertIn("<your-skills-dir>/loop-harness", readme)
+        self.assertIn("agent skill", readme.lower())
+        self.assertIn("metrics", readme.lower())
+        self.assertIn("criteria", readme.lower())
+        self.assertIn("benchmark", readme.lower())
+        self.assertIn("first run", readme.lower())
+        self.assertIn("later runs", readme.lower())
         self.assertIn("does not automatically install operating-system scheduler jobs", readme)
+        self.assertNotIn("Codex", readme)
+        self.assertNotIn("Claude", readme)
+        self.assertNotIn("~/.codex", readme)
+        self.assertNotIn("## Watchdog", readme)
+        self.assertNotIn("## Validation", readme)
+        self.assertNotIn("scripts/watchdog.py setup", readme)
+        self.assertNotIn("validate_run_log_entry.py", readme)
+
         self.assertIn("self/loop-runs/", (ROOT / ".gitignore").read_text(encoding="utf-8"))
         if (ROOT / ".git").exists():
             tracked_self_runs = run(["git", "ls-files", "self/loop-runs"])
@@ -56,15 +71,27 @@ class ToolingRegressionTests(unittest.TestCase):
         text_file_suffixes = {".md", ".py", ".json", ".yaml", ".yml", ".toml", ".txt"}
         text_file_names = {".gitignore", "LICENSE"}
         forbidden = [
-            re.compile("/" + r"Users/[^\\s`'\"]+"),
-            re.compile(r"\\b" + "hai" + r"do\\b", re.IGNORECASE),
-            re.compile("gho" + r"_[A-Za-z0-9_]+"),
-            re.compile("github" + r"_pat_[A-Za-z0-9_]+"),
+            re.compile("/" + "Users/" + r"[^\s`'\"]+"),
+            re.compile(r"\b" + "hai" + "do" + r"\b", re.IGNORECASE),
+            re.compile("gh" + "o_" + r"[A-Za-z0-9_]+"),
+            re.compile("github" + "_pat_" + r"[A-Za-z0-9_]+"),
             re.compile(r"sk-[A-Za-z0-9]{20,}"),
-            re.compile(r"api[_-]?key\\s*=", re.IGNORECASE),
-            re.compile(r"password\\s*=", re.IGNORECASE),
-            re.compile(r"token\\s*=", re.IGNORECASE),
+            re.compile(r"api[_-]?key\s*=", re.IGNORECASE),
+            re.compile(r"password\s*=", re.IGNORECASE),
+            re.compile(r"token\s*=", re.IGNORECASE),
         ]
+        forbidden_samples = [
+            (forbidden[0], "/" + "Users/example/path"),
+            (forbidden[1], "hai" + "do"),
+            (forbidden[2], "gh" + "o_" + "sampletoken"),
+            (forbidden[3], "github" + "_pat_" + "sampletoken"),
+            (forbidden[5], "api" + "_key = value"),
+            (forbidden[5], "api" + "-key=value"),
+            (forbidden[6], "pass" + "word = value"),
+            (forbidden[7], "tok" + "en = value"),
+        ]
+        for pattern, sample in forbidden_samples:
+            self.assertIsNotNone(pattern.search(sample), f"{pattern.pattern} did not match sample")
 
         for path in ROOT.rglob("*"):
             if path.is_dir():
