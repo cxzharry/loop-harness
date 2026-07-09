@@ -9,7 +9,9 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 import unittest
+import urllib.request
 from pathlib import Path
 
 
@@ -36,6 +38,46 @@ class ToolingRegressionTests(unittest.TestCase):
         completed = run(["python3", "scripts/init_loop.py", str(tmp)])
         self.assertEqual(completed.returncode, 0, completed.stdout)
         return tmp / ".loop-harness"
+
+    def write_review_candidates(self, tmp: Path) -> Path:
+        candidates = {
+            "surface": "onboarding flow",
+            "intent": "UX_OPTIMIZE",
+            "profiles": ["ux-product"],
+            "metrics": [
+                {
+                    "id": "activation_completion",
+                    "title": "Activation completion rate",
+                    "description": "Use when success depends on users completing the target flow.",
+                    "recommended": True,
+                },
+                {
+                    "id": "visual_clarity",
+                    "title": "Visual clarity score",
+                    "description": "Use when hierarchy, readability, and trust are the main target.",
+                    "recommended": False,
+                },
+            ],
+            "criteria": [
+                {
+                    "id": "ux_acceptance",
+                    "title": "UX acceptance criteria",
+                    "description": "Checks task clarity, text fit, control affordance, and mobile behavior.",
+                    "recommended": True,
+                }
+            ],
+            "benchmark": [
+                {
+                    "id": "playwright_critical_flow",
+                    "title": "Playwright critical-flow smoke",
+                    "description": "Runs the target route and flow with real browser assertions.",
+                    "recommended": True,
+                }
+            ],
+        }
+        path = tmp / "review-candidates.json"
+        path.write_text(json.dumps(candidates), encoding="utf-8")
+        return path
 
     def test_public_release_hygiene_has_docs_and_no_local_paths(self) -> None:
         self.assertTrue((ROOT / "README.md").is_file())
@@ -103,6 +145,127 @@ class ToolingRegressionTests(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             for pattern in forbidden:
                 self.assertIsNone(pattern.search(text), f"{pattern.pattern} matched {path.relative_to(ROOT)}")
+
+    def test_review_contract_renders_lean_human_selection_ui(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            tmp = Path(raw)
+            artifact_root = self.scaffold(tmp)
+            candidates = self.write_review_candidates(tmp)
+            rendered = run(
+                [
+                    "python3",
+                    "scripts/review_contract.py",
+                    "render",
+                    "--repo",
+                    raw,
+                    "--candidates",
+                    str(candidates),
+                ]
+            )
+            self.assertEqual(rendered.returncode, 0, rendered.stdout)
+            review_html = artifact_root / "review" / "evaluation-contract.html"
+            self.assertTrue(review_html.is_file(), rendered.stdout)
+            html = review_html.read_text(encoding="utf-8")
+            self.assertIn("Metrics", html)
+            self.assertIn("Criteria", html)
+            self.assertIn("Benchmark", html)
+            self.assertNotIn("Rubric", html)
+            self.assertIn("Activation completion rate (Recommended)", html)
+            self.assertIn("data-group=\"metrics\"", html)
+            self.assertIn("data-group=\"criteria\"", html)
+            self.assertIn("data-group=\"benchmark\"", html)
+            self.assertIn("<button class=\"no", html)
+            self.assertLess(html.index("<button class=\"no"), html.index("<button class=\"yes"))
+            self.assertIn("data-recommended=\"true\" data-choice=\"yes\"", html)
+            self.assertIn("data-recommended=\"false\" data-choice=\"no\"", html)
+
+    def test_review_contract_server_saves_selection_and_confirm_locks_criteria(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            tmp = Path(raw)
+            artifact_root = self.scaffold(tmp)
+            candidates = self.write_review_candidates(tmp)
+            process = subprocess.Popen(
+                [
+                    "python3",
+                    "scripts/review_contract.py",
+                    "serve",
+                    "--repo",
+                    raw,
+                    "--candidates",
+                    str(candidates),
+                    "--host",
+                    "127.0.0.1",
+                    "--port",
+                    "0",
+                    "--once",
+                ],
+                cwd=ROOT,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            try:
+                assert process.stdout is not None
+                server_info = json.loads(process.stdout.readline())
+                selection = {
+                    "items": [
+                        {"group": "metrics", "id": "activation_completion", "accepted": True},
+                        {"group": "metrics", "id": "visual_clarity", "accepted": False},
+                        {"group": "criteria", "id": "ux_acceptance", "accepted": True},
+                        {"group": "benchmark", "id": "playwright_critical_flow", "accepted": True},
+                    ]
+                }
+                request = urllib.request.Request(
+                    f"{server_info['url']}/selection",
+                    data=json.dumps(selection).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    saved = json.loads(response.read().decode("utf-8"))
+                self.assertTrue(saved["ok"])
+                for _attempt in range(30):
+                    if process.poll() is not None:
+                        break
+                    time.sleep(0.05)
+                self.assertEqual(process.wait(timeout=5), 0)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.wait(timeout=5)
+                if process.stdout is not None:
+                    process.stdout.close()
+
+            selection_path = artifact_root / "review" / "evaluation-contract-selection.json"
+            self.assertTrue(selection_path.is_file())
+            selected = json.loads(selection_path.read_text(encoding="utf-8"))
+            accepted_ids = {item["id"] for item in selected["items"] if item["accepted"]}
+            self.assertEqual(
+                accepted_ids,
+                {"activation_completion", "ux_acceptance", "playwright_critical_flow"},
+            )
+
+            confirmed = run(["python3", "scripts/review_contract.py", "confirm", "--repo", raw, "--yes"])
+            self.assertEqual(confirmed.returncode, 0, confirmed.stdout)
+            criteria = (artifact_root / "criteria" / "current.md").read_text(encoding="utf-8")
+            self.assertIn("Contract status: locked", criteria)
+            self.assertIn("Activation completion rate", criteria)
+            self.assertIn("UX acceptance criteria", criteria)
+            self.assertIn("playwright_critical_flow", criteria)
+            self.assertIn("CLI confirmed: yes", criteria)
+
+    def test_skill_requires_brainstormed_html_selection_before_actioning(self) -> None:
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        operation = (ROOT / "references" / "operation.md").read_text(encoding="utf-8")
+        template = (ROOT / "assets" / "templates" / "criteria" / "current.md").read_text(encoding="utf-8")
+        combined = "\n".join([skill, operation, template])
+        self.assertIn("human-confirmed evaluation contract", combined)
+        self.assertIn("review_contract.py", combined)
+        self.assertIn("Metrics", combined)
+        self.assertIn("Criteria", combined)
+        self.assertIn("Benchmark", combined)
+        self.assertIn("CLI confirmed: yes", combined)
+        self.assertNotIn("Do not ask when a safe default exists", operation)
 
     def test_controller_does_not_pass_negated_pass_text(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

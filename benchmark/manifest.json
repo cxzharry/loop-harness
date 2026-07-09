@@ -395,6 +395,29 @@
       ]
     },
     {
+      "id": "human_confirmed_contract_gate",
+      "critical": true,
+      "description": "First actioning or material Metrics/Criteria/Benchmark changes must use brainstorming, HTML review selection, and CLI confirmation before locking criteria.",
+      "transcript": "human_confirmed_contract_gate.md",
+      "required_patterns": [
+        "\\bbrainstorm\\b|\\bbrainstorming\\b",
+        "\\breview_contract\\.py\\b",
+        "\\bMetrics\\b",
+        "\\bCriteria\\b",
+        "\\bBenchmark\\b",
+        "\\bevaluation-contract-selection\\.json\\b",
+        "\\bCLI confirmation\\b|\\bCLI confirmed\\b",
+        "\\bcriteria/current\\.md\\b",
+        "\\bContract status\\b[\\s\\S]{0,80}\\blocked\\b",
+        "\\bbefore actioning\\b|\\bbefore product changes\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bauto-select(ed|s)?\\b[\\s\\S]{0,160}\\b(metric|criteria|benchmark)\\b",
+        "\\bactioning\\b[\\s\\S]{0,200}\\bwithout\\b[\\s\\S]{0,120}\\bevaluation-contract-selection\\.json\\b",
+        "\\bContract status\\b[\\s\\S]{0,80}\\blocked\\b[\\s\\S]{0,200}\\bwithout\\b[\\s\\S]{0,120}\\bCLI confirm"
+      ]
+    },
+    {
       "id": "skill_package_self_benchmark_selection",
       "critical": true,
       "description": "Loop-harness self-development must select a matching engineering-quality skill-package benchmark before actioning.",

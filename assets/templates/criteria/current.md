@@ -4,6 +4,14 @@ Use this file to lock the metric, criteria, benchmark seeds, and verification su
 
 Contract status: draft | locked
 
+## Review Gate
+
+- Human-confirmed evaluation contract required: yes
+- Review page: review/evaluation-contract.html
+- Selection file: review/evaluation-contract-selection.json
+- CLI confirmed: no | yes
+- Locked contract requires: CLI confirmed: yes
+
 ## Product Surface
 
 - Surface:
@@ -13,6 +21,7 @@ Contract status: draft | locked
 
 ## Metric
 
+- Selected Metrics:
 - Primary metric:
 - Baseline window:
 - Target:
@@ -23,6 +32,7 @@ Contract status: draft | locked
 
 ## Acceptance Criteria
 
+- Selected Criteria:
 - Criterion:
 - Evidence required:
 - Pass threshold:
@@ -30,6 +40,7 @@ Contract status: draft | locked
 
 ## Benchmark seeds
 
+- Selected Benchmark:
 - Seed id:
 - Matching rule:
 - Expected result:

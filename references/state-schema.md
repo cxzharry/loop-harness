@@ -17,6 +17,7 @@ In target repos, put loop artifacts in `.loop-harness/` by default:
   benchmarks/
     active/
     archive/
+  review/
   runs/
     archive/
   schedules/
@@ -71,6 +72,10 @@ Required sections:
 
 Runtime criteria are repo-local, not skill-package benchmark criteria. This file is the locked evaluation contract for the current loop:
 - Product surface, user flow, intent, and profiles.
+- Human-confirmed evaluation contract source and CLI confirmation.
+- Selected Metrics.
+- Selected Criteria.
+- Selected Benchmark seeds.
 - Primary metric or acceptance rubric.
 - Baseline window, target, target minimum, direction, source, and sample/window caveat.
 - Acceptance criteria, evidence required, pass thresholds, and non-applicability rules.
@@ -78,7 +83,17 @@ Runtime criteria are repo-local, not skill-package benchmark criteria. This file
 - Playwright route/URL, viewports, flow steps, assertions, and screenshot/trace expectation when app verification is relevant.
 - User confirmations, human gates, non-goals, and last reviewed timestamp.
 
-If this file is missing, incomplete, or not `Contract status: locked`, the next loop should run report-only/evaluation-contract bootstrap before actioning.
+If this file is missing, incomplete, or not `Contract status: locked`, the next loop should run report-only/evaluation-contract bootstrap before actioning. On first runs and material contract changes, the locked contract must come from `.loop-harness/review/evaluation-contract-selection.json` plus CLI confirmation.
+
+## review/
+
+Stores the A-lite human selection gate before actioning:
+- `evaluation-contract-candidates.json`: proposed Metrics, Criteria, and Benchmark candidates.
+- `evaluation-contract.html`: local review page with independent No/Yes controls.
+- `evaluation-contract-selection.json`: browser-saved selections.
+- `evaluation-contract-confirmed.json`: CLI-confirmed selection used to lock `criteria/current.md`.
+
+The review page is not a benchmark result. It is the human gate that decides which Metrics, Criteria, and Benchmark seeds are allowed to define the loop.
 
 ## product-loop-run-log.md
 

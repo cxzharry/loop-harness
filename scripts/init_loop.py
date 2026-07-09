@@ -32,6 +32,7 @@ RUNTIME_DIRS = [
     "benchmarks/archive",
     "runs",
     "runs/archive",
+    "review",
 ]
 
 
