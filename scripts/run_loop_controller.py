@@ -65,7 +65,7 @@ def append_regression_case(
     command: str,
     output: str,
     stop: str,
-) -> None:
+) -> str:
     benchmark_path.parent.mkdir(parents=True, exist_ok=True)
     evidence = one_line(output)
     block = f"""
@@ -85,11 +85,34 @@ def append_regression_case(
 - Last passed:
 - Status: active
 """
+    active_dir = benchmark_path.parent / "benchmarks" / "active"
+    if active_dir.exists() or (benchmark_path.parent / "benchmarks").exists():
+        active_dir.mkdir(parents=True, exist_ok=True)
+        case_path = active_dir / f"{case_id}.md"
+        if not case_path.exists():
+            case_path.write_text(block.lstrip(), encoding="utf-8")
+
+        index_entry = f"""
+
+- Case id: {case_id}
+- Source: benchmarks/active/{case_id}.md
+- Matching rule: rerun `{command}` when profile={profile} or command-backed loop behavior changes
+- Owner profile: {profile}
+- Status: active
+- Last failed: {timestamp}
+"""
+        current = benchmark_path.read_text(encoding="utf-8") if benchmark_path.exists() else "# Product Loop Benchmark\n"
+        if f"benchmarks/active/{case_id}.md" not in current:
+            with benchmark_path.open("a", encoding="utf-8") as handle:
+                handle.write(index_entry)
+        return f"benchmarks/active/{case_id}.md"
+
     current = benchmark_path.read_text(encoding="utf-8") if benchmark_path.exists() else "# Product Loop Benchmark\n"
     if f"## Regression Case: {case_id}" in current:
-        return
+        return f"PRODUCT_LOOP_BENCHMARK.md#{case_id}"
     with benchmark_path.open("a", encoding="utf-8") as handle:
         handle.write(block)
+    return f"PRODUCT_LOOP_BENCHMARK.md#{case_id}"
 
 
 def append_log(
@@ -114,9 +137,9 @@ def append_log(
     promotion_status = "active" if stopped_failure else "not_applicable"
     benchmark_case_id = f"controller-{digest}" if stopped_failure else "not_applicable"
     severity = "medium" if stopped_failure else "none"
-    benchmark_promoted = f"PRODUCT_LOOP_BENCHMARK.md#{benchmark_case_id}" if stopped_failure else "not_applicable"
+    benchmark_promoted = "not_applicable"
     if stopped_failure:
-        append_regression_case(
+        benchmark_promoted = append_regression_case(
             log_path.parent / "PRODUCT_LOOP_BENCHMARK.md",
             case_id=benchmark_case_id,
             timestamp=timestamp,

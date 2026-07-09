@@ -76,6 +76,14 @@ def parse_regression_cases(path: Path) -> list[dict[str, Any]]:
     return cases
 
 
+def repo_benchmark_paths(artifact_root: Path) -> list[Path]:
+    paths = [artifact_root / "PRODUCT_LOOP_BENCHMARK.md"]
+    split_dir = artifact_root / "benchmarks" / "active"
+    if split_dir.is_dir():
+        paths.extend(sorted(split_dir.glob("*.md")))
+    return paths
+
+
 def load_skill_cases() -> list[dict[str, Any]]:
     manifest = SKILL_DIR / "benchmark" / "manifest.json"
     try:
@@ -153,7 +161,9 @@ def main() -> int:
     artifact_root = resolve_artifact_root(repo)
     query_terms = words(args.profile, args.intent, args.surface, args.metric, " ".join(args.files))
 
-    cases = parse_regression_cases(artifact_root / "PRODUCT_LOOP_BENCHMARK.md")
+    cases: list[dict[str, Any]] = []
+    for path in repo_benchmark_paths(artifact_root):
+        cases.extend(parse_regression_cases(path))
     if args.include_skill:
         cases.extend(load_skill_cases())
     selected = [

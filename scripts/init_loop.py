@@ -21,7 +21,18 @@ TEMPLATE_FILES = {
     "AGENT_HANDOFF.md": "AGENT_HANDOFF.md",
     "worktree-map.md": "worktree-map.md",
     "product-loop-run-log.template.md": "product-loop-run-log.md",
+    "criteria/current.md": "criteria/current.md",
 }
+
+RUNTIME_DIRS = [
+    "agent-tasks",
+    "schedules",
+    "criteria",
+    "benchmarks/active",
+    "benchmarks/archive",
+    "runs",
+    "runs/archive",
+]
 
 
 def copy_template(src: Path, dst: Path, force: bool) -> str:
@@ -36,8 +47,8 @@ def scaffold(repo: Path, artifact_dir: str, force: bool) -> dict[str, str]:
     root = repo.resolve()
     target = root / artifact_dir
     target.mkdir(parents=True, exist_ok=True)
-    (target / "agent-tasks").mkdir(exist_ok=True)
-    (target / "schedules").mkdir(exist_ok=True)
+    for dirname in RUNTIME_DIRS:
+        (target / dirname).mkdir(parents=True, exist_ok=True)
 
     results: dict[str, str] = {}
     for src_name, dst_name in TEMPLATE_FILES.items():
@@ -69,8 +80,8 @@ def main() -> int:
     print(f"Loop harness artifacts: {repo.resolve() / args.artifact_dir}")
     for name, status in sorted(results.items()):
         print(f"{status}: {name}")
-    print("created: agent-tasks/")
-    print("created: schedules/")
+    for dirname in RUNTIME_DIRS:
+        print(f"created: {dirname}/")
     return 0
 
 

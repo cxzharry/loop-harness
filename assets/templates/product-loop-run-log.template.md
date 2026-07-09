@@ -1,6 +1,6 @@
 # Product Loop Run Log
 
-Append one entry per loop run. Keep raw errors, findings, and benchmark promotion decisions in this single file; do not create a separate error log or findings file.
+Append one recent entry per loop run. Keep raw errors, findings, and benchmark promotion decisions in this single file; do not create a separate error log or findings file. When the log grows large, move detailed historical entries under `runs/archive/` and keep archive pointers here.
 
 ## Entries
 

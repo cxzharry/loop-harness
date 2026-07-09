@@ -8,6 +8,8 @@ Profiles: ux-product, engineering-quality
 Readiness level: L1 report-only
 Execution mode: report-only
 Cadence:
+Scheduler: watchdog.py
+Scheduler state directory: schedules/
 
 ## Scope
 
@@ -24,6 +26,7 @@ Denylist:
 
 ## Verification
 
+Evaluation contract: criteria/current.md
 Primary checks:
 Metric/data sources:
 Browser routes:
@@ -54,6 +57,14 @@ Conflict policy:
 - Persistence: update state, append the run log, and update handoff/worktree files.
 - Scheduling: stop, run again, schedule, pause, or escalate.
 
+## Watchdog Scheduler
+
+Commands: `watchdog.py setup`, `watchdog.py status`, `watchdog.py pause`, `watchdog.py resume`, `watchdog.py tail`, `watchdog.py uninstall`, `watchdog.py tick`
+Status/logs: schedules/
+Process model: each scheduled tick starts fresh and continues from persisted loop state.
+Overlap lock: schedules/ lock file prevents concurrent ticks.
+Scheduled run-until-done requirement: criteria/current.md has `Contract status: locked`.
+
 ## Budget
 
 See `product-loop-budget.md`.
@@ -64,6 +75,8 @@ Primary metric:
 Baseline window:
 Target:
 Target minimum:
+Acceptance criteria: criteria/current.md
+Benchmark seeds: criteria/current.md
 Iteration budget: until-done
 Plateau patience: 3 iterations without meaningful improvement
 Stop conditions: SUCCESS, EXHAUSTED, PLATEAU, REGRESSION, BUDGET, HUMAN_GATE, ENV, UNKNOWN

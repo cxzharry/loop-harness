@@ -94,6 +94,10 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Source run-log entry: 2026-06-30T10:02:11Z
 - Why it matters: loop-harness should learn across local repos without bloating the skill package or promoting noisy repo-specific failures globally.
 
+- Check: public release hygiene must be repeatable before GitHub publish.
+- Source run-log entry: 2026-07-09T05:04:30Z
+- Why it matters: a public skill repo needs README/LICENSE, generic installation docs, no personal absolute paths, no secret literals, and local cache/runtime ignores before push.
+
 ## Regression Cases
 
 ## Regression Case: ux-skipped-taste-slop-must-fail
@@ -231,22 +235,157 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 - Last passed: 2026-06-30T10:02:11Z
 - Status: active
 
-## Regression Case: sample-case-id
+## Regression Case: latest-run-log-validator-hard-gate
 
-- Source run-log entry:
-- Error class: ui_regression | runtime_error | metric_regression | content_drift | env_blocker | scope_regression
-- Surface/URL:
-- Trigger condition:
-- Playwright steps:
-- Expected result:
-- Failure evidence:
-- Matching rule:
-- Owner profile:
-- Last failed:
-- Last passed:
-- Status: active | retired
+- Source run-log entry: 2026-07-09T03:27:48Z
+- Error class: scope_regression
+- Surface/URL: `scripts/product_loop_audit.py`, `scripts/validate_run_log_entry.py`, `self/loop-runs/product-loop-run-log.md`
+- Trigger condition: a loop instance has an earlier structured run-log entry but the latest timestamped entry lacks `Raw Run Result`, `Finding`, or `Benchmark Promotion` sections.
+- Playwright steps: not applicable
+- Expected result: `product_loop_audit.py <loop-root> --min-level L3` exits non-zero and reports `MISS latest run-log entry invalid`.
+- Failure evidence: pre-fix self-loop audit reported `100/100 L3` while `validate_run_log_entry.py self/loop-runs/product-loop-run-log.md` failed on the latest entry.
+- Matching rule: any change to product-loop audit logic, run-log validation, self-development validation commands, or run-log schema.
+- Owner profile: engineering-quality, content-docs
+- Last failed: 2026-07-09T03:27:48Z pre-fix RED test
+- Last passed: 2026-07-09T03:27:48Z
+- Status: active
+
+## Regression Case: skill-frontmatter-trigger-only
+
+- Source run-log entry: 2026-07-09T03:27:48Z
+- Error class: scope_regression
+- Surface/URL: `SKILL.md`
+- Trigger condition: skill frontmatter description starts with a what-it-does summary or includes workflow phrases such as prioritizing candidates, forming hypotheses, verifying evidence, persisting learnings, or scheduling the next loop.
+- Playwright steps: not applicable
+- Expected result: `SKILL.md` description starts with `Use when` and describes trigger contexts only.
+- Failure evidence: pre-fix frontmatter began with `Autonomous product optimization loop harness...` and summarized workflow steps, which can cause agents to shortcut the skill body.
+- Matching rule: any change to skill frontmatter, `agents/openai.yaml`, or trigger/discovery metadata.
+- Owner profile: engineering-quality, content-docs
+- Last failed: 2026-07-09T03:27:48Z pre-fix RED test
+- Last passed: 2026-07-09T03:27:48Z
+- Status: active
+
+## Regression Case: canonical-scheduling-next-actions
+
+- Source run-log entry: 2026-07-09T03:27:48Z
+- Error class: scope_regression
+- Surface/URL: `SKILL.md`, `references/operation.md`, `scripts/run_loop_controller.py`, `scripts/validate_run_log_entry.py`
+- Trigger condition: scheduling output docs mix legacy values such as `NEXT_ITERATION` or `REPLAN` with runtime next-action values.
+- Playwright steps: not applicable
+- Expected result: scheduling docs use exactly one next action from `stop_success`, `run_again_now`, `schedule`, `pause`, or `escalate`; stop conditions remain separate from next actions.
+- Failure evidence: pre-fix `references/operation.md` told agents to decide `SUCCESS`, `NEXT_ITERATION`, `REPLAN`, `PAUSE`, `ESCALATE`, or `STOP`, while scripts validated `stop_success` and `run_again_now`.
+- Matching rule: any change to scheduling docs, run-until-done controller stop values, run-log validator, state schema, or output report shape.
+- Owner profile: engineering-quality, content-docs
+- Last failed: 2026-07-09T03:27:48Z pre-fix RED test
+- Last passed: 2026-07-09T03:27:48Z
+- Status: active
+
+## Regression Case: skill-package-self-benchmark-selection
+
+- Source run-log entry: 2026-07-09T03:27:48Z
+- Error class: scope_regression
+- Surface/URL: `benchmark/manifest.json`, `scripts/select_benchmarks.py`
+- Trigger condition: selecting benchmarks for `--profile engineering-quality --intent ENGINEERING_QUALITY --surface skill-package --include-skill --require` returns zero cases.
+- Playwright steps: not applicable
+- Expected result: benchmark selection returns at least `strict_run_log_validator` for loop-harness self-development work.
+- Failure evidence: pre-fix benchmark selection printed `Selected 0 benchmark case(s)` and returned exit code 1 for engineering-quality skill-package self-development.
+- Matching rule: any change to skill-pressure manifest descriptions, benchmark selection tokenization, self-development surfaces, or validation commands.
+- Owner profile: engineering-quality
+- Last failed: 2026-07-09T03:27:48Z pre-fix RED test
+- Last passed: 2026-07-09T03:27:48Z
+- Status: active
+
+## Regression Case: runtime-evaluation-contract-scaffold
+
+- Source run-log entry: 2026-07-09T04:17:58Z
+- Error class: scope_regression
+- Surface/URL: `scripts/init_loop.py`, `assets/templates/criteria/current.md`, `SKILL.md`, `references/operation.md`, `references/state-schema.md`
+- Trigger condition: target-repo scaffolding omits `.loop-harness/criteria/current.md` or actioning guidance does not require `Contract status: locked` before product changes.
+- Playwright steps: not applicable
+- Expected result: scaffold creates `.loop-harness/criteria/current.md`; docs require locked metric/rubric, acceptance criteria, benchmark seeds, target, evidence source, and Playwright flow when applicable before actioning.
+- Failure evidence: pre-fix scaffold created no repo-local runtime criteria contract, so criteria could be mistaken for package-level templates only.
+- Matching rule: any change to scaffold files, criteria templates, start checklist, operation contract, state schema, or pre-action loop requirements.
+- Owner profile: engineering-quality, content-docs
+- Last failed: 2026-07-09T04:17:58Z pre-fix RED test
+- Last passed: 2026-07-09T04:17:58Z
+- Status: active
+
+## Regression Case: split-active-benchmark-files
+
+- Source run-log entry: 2026-07-09T04:17:58Z
+- Error class: scope_regression
+- Surface/URL: `scripts/select_benchmarks.py`, `scripts/product_loop_audit.py`, `assets/templates/PRODUCT_LOOP_BENCHMARK.md`
+- Trigger condition: repo-local active regression cases are stored in `.loop-harness/benchmarks/active/*.md` but selector or audit only reads `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`.
+- Playwright steps: not applicable
+- Expected result: selector and audit read compact benchmark index plus active split case files; archive files under `benchmarks/archive/` are ignored for active blocking.
+- Failure evidence: pre-fix selector parsed only `PRODUCT_LOOP_BENCHMARK.md`, so a split active case did not block forward optimization.
+- Matching rule: any change to benchmark selector, audit active-case parsing, benchmark template, archive retention docs, or runtime artifact layout.
+- Owner profile: engineering-quality
+- Last failed: 2026-07-09T04:17:58Z pre-fix RED test
+- Last passed: 2026-07-09T04:17:58Z
+- Status: active
+
+## Regression Case: compact-benchmark-index-controller-promotion
+
+- Source run-log entry: 2026-07-09T04:17:58Z
+- Error class: scope_regression
+- Surface/URL: `scripts/run_loop_controller.py`, `assets/templates/PRODUCT_LOOP_BENCHMARK.md`
+- Trigger condition: command-backed controller promotes a terminal failure by appending the full regression case into `PRODUCT_LOOP_BENCHMARK.md` when `benchmarks/active/` exists.
+- Playwright steps: not applicable
+- Expected result: controller writes the full active case to `benchmarks/active/<case-id>.md` and appends only compact index metadata to `PRODUCT_LOOP_BENCHMARK.md`.
+- Failure evidence: pre-fix controller appended every promoted case directly to `PRODUCT_LOOP_BENCHMARK.md`, making the file grow without a scale boundary.
+- Matching rule: any change to controller promotion, benchmark index template, active split directory creation, or run-log benchmark promotion path.
+- Owner profile: engineering-quality
+- Last failed: 2026-07-09T04:17:58Z pre-fix RED test
+- Last passed: 2026-07-09T04:17:58Z
+- Status: active
+
+## Regression Case: self-pressure-coverage-scale-contract
+
+- Source run-log entry: 2026-07-09T04:17:58Z
+- Error class: scope_regression
+- Surface/URL: `benchmark/manifest.json`, `benchmark/fixtures/pass`, `benchmark/cases/`
+- Trigger condition: pressure suite lacks cases or committed pass fixtures for evaluation-contract-before-action, split active benchmark files, scaffold runtime criteria dirs, or self skill-package benchmark selection.
+- Playwright steps: not applicable
+- Expected result: `python3 benchmark/run_pressure_eval.py --transcripts benchmark/fixtures/pass` includes these behaviors and scores 10/10.
+- Failure evidence: pre-fix pressure selection for `evaluation_contract_before_action` returned `No cases selected`, and split active benchmark behavior had no committed fixture coverage.
+- Matching rule: any change to pressure manifest, pressure fixtures, case docs, or self-development validation commands.
+- Owner profile: engineering-quality, content-docs
+- Last failed: 2026-07-09T04:17:58Z pre-fix RED test
+- Last passed: 2026-07-09T04:17:58Z
+- Status: active
 
 ## Metric Baselines
+
+## Regression Case: watchdog-scheduler-lifecycle-semantics
+
+- Source run-log entry: 2026-07-09T04:45:18Z
+- Error class: scope_regression
+- Surface/URL: `SKILL.md`, `references/operation.md`, `references/state-schema.md`, `assets/templates/PRODUCT_LOOP.md`, `assets/templates/PRODUCT_LOOP_STATE.md`, `assets/templates/product-loop-budget.md`, `self/loop-runs/`
+- Trigger condition: docs/templates describe scheduled loops without the watchdog command lifecycle, persisted-state process model, criteria lock requirement, overlap lock, or `.loop-harness/schedules/` status/log path.
+- Playwright steps: outside_scope for skill-package docs
+- Expected result: docs/templates list `watchdog.py setup/status/pause/resume/tail/uninstall/tick`; scheduled ticks start fresh and continue through `.loop-harness/*`; `run-until-done` uses locked criteria; the lock serializes ticks; status/logs live under `.loop-harness/schedules/`.
+- Failure evidence: watchdog semantics needed user-facing documentation and self-loop persistence coverage.
+- Matching rule: any change to scheduling docs, scheduler templates, state schema, budget template, self-loop state/run-log/benchmark artifacts, or watchdog command names.
+- Owner profile: engineering-quality, content-docs
+- Last failed: 2026-07-09T04:45:18Z pre-documentation gap
+- Last passed: 2026-07-09T04:45:18Z
+- Status: active
+
+## Regression Case: public-release-hygiene
+
+- Source run-log entry: 2026-07-09T05:04:30Z
+- Error class: scope_regression
+- Surface/URL: `README.md`, `LICENSE`, `.gitignore`, `SKILL.md`, `benchmark/test_tooling_regressions.py`, `self/loop-runs/`
+- Trigger condition: repository is prepared for public GitHub release without README/LICENSE, with personal absolute local paths, with token/API-key literals in text files, with watchdog docs implying automatic OS scheduler installation, or without ignores for local caches/runtime artifacts.
+- Playwright steps: not applicable
+- Expected result: `test_public_release_hygiene_has_docs_and_no_local_paths` passes; README uses `$loop-harness` examples and says watchdog does not automatically install OS scheduler jobs; public text files contain no absolute local user paths, local username, GitHub token, OpenAI-style secret, API-key assignment, password assignment, or token assignment literals.
+- Failure evidence: public readiness review found missing README/LICENSE, no remote, local absolute paths in self artifacts, and local generated cache risk before release cleanup.
+- Matching rule: any change to README, LICENSE, `.gitignore`, skill validation docs, self-loop artifacts, public release workflow, or token/path scanning patterns.
+- Owner profile: engineering-quality, content-docs, release-readiness
+- Last failed: 2026-07-09T05:04:30Z pre-test RED guard did not exist
+- Last passed: 2026-07-09T05:04:30Z
+- Status: active
 
 - Metric: pressure benchmark case score
 - Baseline window: before `benchmark/` scaffold
@@ -290,3 +429,30 @@ Promote stable evidence from `self/loop-runs/product-loop-run-log.md` after each
 
 - Rule: Runtime learning must not be written into the skill package; reusable cross-repo knowledge belongs in `~/.codex/loop-harness/knowledge/` and goes through an inbox/gate.
 - Evidence: `references/global-knowledge.md`, `scripts/select_knowledge.py`, `scripts/promote_global_knowledge.py`
+
+- Rule: L3 audit must fail when the latest run-log entry fails `validate_run_log_entry.py`.
+- Evidence: `scripts/product_loop_audit.py`, `scripts/validate_run_log_entry.py`, `benchmark/test_tooling_regressions.py`
+
+- Rule: Skill frontmatter descriptions must be trigger-only and start with `Use when`.
+- Evidence: `SKILL.md`, `benchmark/test_tooling_regressions.py`
+
+- Rule: Scheduling next actions are `stop_success`, `run_again_now`, `schedule`, `pause`, or `escalate`; do not mix them with stop-condition enum names.
+- Evidence: `SKILL.md`, `references/operation.md`, `scripts/run_loop_controller.py`
+
+- Rule: Loop-harness self-development under `engineering-quality` and `skill-package` must select a matching benchmark before actioning.
+- Evidence: `benchmark/manifest.json`, `scripts/select_benchmarks.py`, `benchmark/test_tooling_regressions.py`
+
+- Rule: Target-repo actioning must be gated by a locked repo-local evaluation contract at `.loop-harness/criteria/current.md`.
+- Evidence: `assets/templates/criteria/current.md`, `scripts/init_loop.py`, `references/operation.md`, `benchmark/manifest.json`
+
+- Rule: Active benchmark cases may scale into `benchmarks/active/*.md`; selectors and audits must ignore archived cases under `benchmarks/archive/`.
+- Evidence: `scripts/select_benchmarks.py`, `scripts/product_loop_audit.py`, `benchmark/test_tooling_regressions.py`
+
+- Rule: Keep `PRODUCT_LOOP_BENCHMARK.md` as a compact active index when split active files exist.
+- Evidence: `scripts/run_loop_controller.py`, `assets/templates/PRODUCT_LOOP_BENCHMARK.md`, `references/state-schema.md`
+
+- Rule: Watchdog scheduler docs must cover `setup/status/pause/resume/tail/uninstall/tick`, `.loop-harness/schedules/`, persisted-state continuation, locked criteria for `run-until-done`, and the overlap lock.
+- Evidence: `SKILL.md`, `references/operation.md`, `references/state-schema.md`, `assets/templates/`
+
+- Rule: Public release hygiene must keep README/LICENSE present, avoid personal absolute paths and secret literals in public text files, and keep local cache/runtime artifacts ignored.
+- Evidence: `README.md`, `LICENSE`, `.gitignore`, `benchmark/test_tooling_regressions.py`

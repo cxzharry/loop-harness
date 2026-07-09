@@ -1,6 +1,6 @@
 ---
 name: loop-harness
-description: Autonomous product optimization loop harness for improving live products, prototypes, docs, and engineering quality over repeated runs. Use when Codex should discover product improvement opportunities, prioritize them, form hypotheses, hand off bounded interventions, verify evidence, persist learnings, and decide whether to schedule the next loop across UX, growth metrics, engineering quality, content/docs, or release readiness.
+description: Use when a user asks Codex to run repeated evidence-backed optimization on a product, prototype, docs set, release checklist, metric funnel, UX flow, or engineering-quality surface.
 ---
 
 # Loop Harness
@@ -12,11 +12,13 @@ Run controlled product optimization loops with evidence. Use this skill to impro
 - Execute all five phases every iteration: Discovery, Handoff, Verification, Persistence, Scheduling.
 - Prefer real product signals over generic recommendations.
 - There is no `action-once` mode. Any actioning work uses `run-until-done` and stops only on a recorded stop condition.
+- Scheduled ticks are fresh processes; continuity comes from `.loop-harness/*` state and the locked criteria file.
 - If an app, route, local dev server, deployed page, or prototype must be verified, use Playwright. Static inspection alone cannot produce `PASS`.
 - UX/UI visual-quality work needs Playwright plus `design-taste-frontend` and `design-slop-ban` checks when the surface can be opened.
 - Failed, regressed, partial-defect, ENV, or UNKNOWN iterations must append raw evidence plus a structured finding to `product-loop-run-log.md`, then promote durable failures into `PRODUCT_LOOP_BENCHMARK.md`.
 - Do not create separate `error-log.md`, `findings.md`, or `run-log-error.md`.
 - Run matching active benchmark cases before accepting new optimization.
+- Before actioning, lock an evaluation contract with metric, criteria, benchmark seeds, target, verification source, and Playwright flow when applicable.
 - Before actioning, plan the current iteration as an execution batch with one or more bounded lanes; do not serialize independent lanes into separate iterations.
 - Persist state before scheduling the next iteration.
 - In target repos, store persistent loop artifacts under `.loop-harness/` by default; do not scatter them across the repo root.
@@ -37,7 +39,7 @@ Read `references/operation.md` before running a loop. Then load only the relevan
 
 1. State the detected intent and product surface in one line.
 2. Use `.loop-harness/` as the loop artifact root unless the user explicitly selects another folder.
-3. Load existing artifacts if present: `.loop-harness/PRODUCT_LOOP.md`, `.loop-harness/PRODUCT_LOOP_STATE.md`, `.loop-harness/product-loop-run-log.md`, `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`, and `.loop-harness/product-loop-budget.md`.
+3. Load existing artifacts if present: `.loop-harness/PRODUCT_LOOP.md`, `.loop-harness/PRODUCT_LOOP_STATE.md`, `.loop-harness/criteria/current.md`, `.loop-harness/product-loop-run-log.md`, `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`, and `.loop-harness/product-loop-budget.md`.
 4. Scaffold missing ongoing-loop artifacts into `.loop-harness/` from `assets/templates/` when needed.
 
 ```bash
@@ -57,7 +59,7 @@ python3 <skill-dir>/scripts/select_benchmarks.py --repo <repo> --profile <profil
 python3 <skill-dir>/scripts/select_knowledge.py --repo <repo> --profile <profile> --intent <intent> --surface <surface>
 ```
 
-8. Ask the user only for unresolved metric, target, surface, human-gate, or schedule decisions that cannot be safely inferred.
+8. Lock `.loop-harness/criteria/current.md` before actioning. If metric, criteria, benchmark seed, target, evidence source, Playwright flow, or human gate cannot be safely inferred, run report-only/evaluation-contract bootstrap and ask only for the unresolved decision.
 9. Run artifact audit after scaffold/artifact changes:
 
 ```bash
@@ -86,6 +88,7 @@ If lanes are independent, execute them in the same iteration using parallel agen
 Before actioning, confirm or infer:
 - measurable target or locked acceptance rubric;
 - `target_min`;
+- acceptance criteria and benchmark seeds in `.loop-harness/criteria/current.md`;
 - safety budget or kill switch;
 - plateau patience;
 - stop conditions;
@@ -123,6 +126,8 @@ After every iteration:
 - Append one run-log entry with `Raw Run Result`, `Finding`, and `Benchmark Promotion` blocks.
 - Promote durable state to `.loop-harness/PRODUCT_LOOP_STATE.md`.
 - Promote reusable checks or failures to `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`.
+- Keep `.loop-harness/PRODUCT_LOOP_BENCHMARK.md` as a compact active index; put large active cases in `.loop-harness/benchmarks/active/` and retired/old cases in `.loop-harness/benchmarks/archive/`.
+- Keep `product-loop-run-log.md` recent and append detailed historical entries under `.loop-harness/runs/archive/` when the log grows large.
 - Update `.loop-harness/AGENT_HANDOFF.md`, `.loop-harness/agent-tasks/`, and `.loop-harness/worktree-map.md` when agents/worktrees are used.
 - Record failed hypotheses and what not to retry.
 - If a finding may be reusable beyond the repo, gate it through `scripts/promote_global_knowledge.py`; do not write runtime learning into the skill package.
@@ -146,8 +151,16 @@ Use `.loop-harness/product-loop-budget.md` for max runs, max changes, subagent/t
 When scheduling is requested, generate the local scheduler artifact under `.loop-harness/schedules/`:
 
 ```bash
-python3 <skill-dir>/scripts/install_scheduler.py --repo <repo> --command "<loop command>" --cadence daily --kind launchd
+python3 <skill-dir>/scripts/watchdog.py setup --repo <repo> --command "<loop command>" --cadence daily
+python3 <skill-dir>/scripts/watchdog.py status --repo <repo>
+python3 <skill-dir>/scripts/watchdog.py pause --repo <repo>
+python3 <skill-dir>/scripts/watchdog.py resume --repo <repo>
+python3 <skill-dir>/scripts/watchdog.py tail --repo <repo>
+python3 <skill-dir>/scripts/watchdog.py tick --repo <repo>
+python3 <skill-dir>/scripts/watchdog.py uninstall --repo <repo>
 ```
+
+Watchdog status, logs, and lock files live under `.loop-harness/schedules/`. The lock prevents overlapping ticks. Scheduled `run-until-done` requires `criteria/current.md` with `Contract status: locked`.
 
 ## Output Shape
 
@@ -175,12 +188,13 @@ python3 <skill-dir>/scripts/select_benchmarks.py --repo <product-repo-root> --pr
 python3 <skill-dir>/scripts/select_knowledge.py --repo <product-repo-root> --profile ux-product --intent UX_OPTIMIZE --surface web-route
 python3 <skill-dir>/benchmark/run_pressure_eval.py --transcripts <skill-dir>/benchmark/fixtures/pass
 python3 <skill-dir>/benchmark/test_tooling_regressions.py
-python3 /Users/haido/.codex/skills/.system/skill-creator/scripts/quick_validate.py <skill-dir>
+python3 <skill-creator-dir>/scripts/quick_validate.py <skill-dir>
 ```
 
 For loop-harness self-development, source and installed skill should both pass:
 
 ```bash
 python3 scripts/product_loop_audit.py self/loop-runs --min-level L3
+python3 scripts/validate_run_log_entry.py self/loop-runs/product-loop-run-log.md
 python3 scripts/product_loop_audit.py assets/templates --min-level L2
 ```

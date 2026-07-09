@@ -4,6 +4,9 @@
 from __future__ import annotations
 
 import plistlib
+import json
+import re
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -24,11 +27,48 @@ def run(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess
     )
 
 
+def watchdog(args: list[str]) -> subprocess.CompletedProcess[str]:
+    return run(["python3", "scripts/watchdog.py", *args])
+
+
 class ToolingRegressionTests(unittest.TestCase):
     def scaffold(self, tmp: Path) -> Path:
         completed = run(["python3", "scripts/init_loop.py", str(tmp)])
         self.assertEqual(completed.returncode, 0, completed.stdout)
         return tmp / ".loop-harness"
+
+    def test_public_release_hygiene_has_docs_and_no_local_paths(self) -> None:
+        self.assertTrue((ROOT / "README.md").is_file())
+        self.assertTrue((ROOT / "LICENSE").is_file())
+        self.assertIn("MIT License", (ROOT / "LICENSE").read_text(encoding="utf-8"))
+
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("$loop-harness", readme)
+        self.assertIn("does not automatically install operating-system scheduler jobs", readme)
+
+        text_file_suffixes = {".md", ".py", ".json", ".yaml", ".yml", ".toml", ".txt"}
+        text_file_names = {".gitignore", "LICENSE"}
+        forbidden = [
+            re.compile("/" + r"Users/[^\\s`'\"]+"),
+            re.compile(r"\\b" + "hai" + r"do\\b", re.IGNORECASE),
+            re.compile("gho" + r"_[A-Za-z0-9_]+"),
+            re.compile("github" + r"_pat_[A-Za-z0-9_]+"),
+            re.compile(r"sk-[A-Za-z0-9]{20,}"),
+            re.compile(r"api[_-]?key\\s*=", re.IGNORECASE),
+            re.compile(r"password\\s*=", re.IGNORECASE),
+            re.compile(r"token\\s*=", re.IGNORECASE),
+        ]
+
+        for path in ROOT.rglob("*"):
+            if path.is_dir():
+                continue
+            if any(part in {".git", ".worktrees", "__pycache__"} for part in path.parts):
+                continue
+            if path.suffix.lower() not in text_file_suffixes and path.name not in text_file_names:
+                continue
+            text = path.read_text(encoding="utf-8")
+            for pattern in forbidden:
+                self.assertIsNone(pattern.search(text), f"{pattern.pattern} matched {path.relative_to(ROOT)}")
 
     def test_controller_does_not_pass_negated_pass_text(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -87,10 +127,66 @@ class ToolingRegressionTests(unittest.TestCase):
             )
             self.assertEqual(completed.returncode, 3, completed.stdout)
             benchmark = (artifact_root / "PRODUCT_LOOP_BENCHMARK.md").read_text(encoding="utf-8")
-            self.assertIn("## Regression Case: controller-", benchmark)
+            active_cases = list((artifact_root / "benchmarks" / "active").glob("controller-*.md"))
+            self.assertEqual(len(active_cases), 1, benchmark)
+            split_case = active_cases[0].read_text(encoding="utf-8")
+            self.assertIn("## Regression Case: controller-", split_case)
+            self.assertIn("- Status: active", split_case)
+            self.assertIn(f"benchmarks/active/{active_cases[0].name}", benchmark)
+            self.assertNotIn("## Regression Case: controller-", benchmark)
             self.assertIn("- Status: active", benchmark)
             validated = run(["python3", "scripts/validate_run_log_entry.py", str(artifact_root / "product-loop-run-log.md")])
             self.assertEqual(validated.returncode, 0, validated.stdout)
+
+    def test_audit_counts_split_active_regression_cases(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            tmp = Path(raw)
+            self.scaffold(tmp)
+            completed = run(
+                [
+                    "python3",
+                    "scripts/run_loop_controller.py",
+                    "--repo",
+                    str(tmp),
+                    "--command",
+                    'printf "SCORE=1\\n"; exit 1',
+                    "--target-score",
+                    "8",
+                    "--plateau-patience",
+                    "1",
+                ]
+            )
+            self.assertEqual(completed.returncode, 3, completed.stdout)
+            audited = run(["python3", "scripts/product_loop_audit.py", raw, "--min-level", "L2"])
+            self.assertEqual(audited.returncode, 0, audited.stdout)
+            self.assertIn("OK active promoted regression cases: 1", audited.stdout)
+
+    def test_audit_ignores_archived_regression_cases(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            tmp = Path(raw)
+            artifact_root = self.scaffold(tmp)
+            completed = run(
+                [
+                    "python3",
+                    "scripts/run_loop_controller.py",
+                    "--repo",
+                    str(tmp),
+                    "--command",
+                    'printf "SCORE=1\\n"; exit 1',
+                    "--target-score",
+                    "8",
+                    "--plateau-patience",
+                    "1",
+                ]
+            )
+            self.assertEqual(completed.returncode, 3, completed.stdout)
+            active_cases = list((artifact_root / "benchmarks" / "active").glob("controller-*.md"))
+            self.assertEqual(len(active_cases), 1)
+            shutil.move(str(active_cases[0]), artifact_root / "benchmarks" / "archive" / active_cases[0].name)
+
+            audited = run(["python3", "scripts/product_loop_audit.py", raw, "--min-level", "L2"])
+            self.assertNotEqual(audited.returncode, 0, audited.stdout)
+            self.assertIn("no active promoted regression case", audited.stdout)
 
     def test_audit_allows_progress_partial_entries_without_promotion(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -240,6 +336,133 @@ class ToolingRegressionTests(unittest.TestCase):
                 data = plistlib.load(handle)
             self.assertEqual(data["ProgramArguments"], ["/bin/zsh", "-lc", "echo a && echo b"])
 
+    def test_watchdog_setup_writes_config_and_launchd_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            artifact_root = self.scaffold(Path(raw))
+            completed = watchdog(
+                [
+                    "setup",
+                    "--repo",
+                    raw,
+                    "--kind",
+                    "launchd",
+                    "--cadence",
+                    "hourly",
+                    "--label",
+                    "loop.watchdog.test",
+                    "--command",
+                    "printf PASS",
+                ]
+            )
+            self.assertEqual(completed.returncode, 0, completed.stdout)
+
+            config_path = artifact_root / "watchdog" / "config.json"
+            self.assertTrue(config_path.is_file(), completed.stdout)
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+            self.assertEqual(config["kind"], "launchd")
+            self.assertEqual(config["cadence"], "hourly")
+            self.assertEqual(config["label"], "loop.watchdog.test")
+            self.assertEqual(config["command"], "printf PASS")
+
+            plists = list((artifact_root / "schedules").glob("*.plist"))
+            self.assertEqual(len(plists), 1, completed.stdout)
+            with plists[0].open("rb") as handle:
+                plist = plistlib.load(handle)
+            self.assertEqual(plist["Label"], "loop.watchdog.test")
+            self.assertIn("scripts/watchdog.py", " ".join(plist["ProgramArguments"]))
+            self.assertIn("tick", plist["ProgramArguments"])
+
+    def test_watchdog_tick_skips_when_paused(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            artifact_root = self.scaffold(Path(raw))
+            setup = watchdog(["setup", "--repo", raw, "--command", "printf SHOULD_NOT_RUN"])
+            self.assertEqual(setup.returncode, 0, setup.stdout)
+            paused = watchdog(["pause", "--repo", raw])
+            self.assertEqual(paused.returncode, 0, paused.stdout)
+
+            completed = watchdog(["tick", "--repo", raw])
+            self.assertEqual(completed.returncode, 0, completed.stdout)
+            self.assertIn("paused", completed.stdout.lower())
+            self.assertFalse((artifact_root / "watchdog" / "run.lock").exists())
+            latest_status = artifact_root / "watchdog" / "status.json"
+            self.assertTrue(latest_status.is_file(), completed.stdout)
+            status = json.loads(latest_status.read_text(encoding="utf-8"))
+            self.assertEqual(status["decision"], "skipped_paused")
+
+    def test_watchdog_tick_refuses_run_until_done_without_locked_criteria(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            artifact_root = self.scaffold(Path(raw))
+            criteria = artifact_root / "criteria" / "current.md"
+            self.assertIn("Contract status: draft | locked", criteria.read_text(encoding="utf-8"))
+            setup = watchdog(["setup", "--repo", raw, "--command", "printf PASS"])
+            self.assertEqual(setup.returncode, 0, setup.stdout)
+
+            completed = watchdog(["tick", "--repo", raw, "--run-until-done"])
+            self.assertNotEqual(completed.returncode, 0, completed.stdout)
+            self.assertIn("criteria/current.md", completed.stdout)
+            self.assertIn("locked", completed.stdout.lower())
+            status = json.loads((artifact_root / "watchdog" / "status.json").read_text(encoding="utf-8"))
+            self.assertEqual(status["decision"], "blocked_unlocked_criteria")
+
+    def test_watchdog_tick_skips_overlap_lock(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            artifact_root = self.scaffold(Path(raw))
+            setup = watchdog(["setup", "--repo", raw, "--command", "printf SHOULD_NOT_RUN"])
+            self.assertEqual(setup.returncode, 0, setup.stdout)
+            lock_path = artifact_root / "watchdog" / "run.lock"
+            lock_path.parent.mkdir(parents=True, exist_ok=True)
+            lock_path.write_text("existing run\n", encoding="utf-8")
+
+            completed = watchdog(["tick", "--repo", raw])
+            self.assertEqual(completed.returncode, 0, completed.stdout)
+            self.assertIn("overlap", completed.stdout.lower())
+            self.assertEqual(lock_path.read_text(encoding="utf-8"), "existing run\n")
+            status = json.loads((artifact_root / "watchdog" / "status.json").read_text(encoding="utf-8"))
+            self.assertEqual(status["decision"], "skipped_overlap")
+
+    def test_watchdog_status_reads_latest_status_json(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            artifact_root = self.scaffold(Path(raw))
+            status_path = artifact_root / "watchdog" / "status.json"
+            status_path.parent.mkdir(parents=True, exist_ok=True)
+            status_path.write_text(
+                '{"decision": "skipped_paused", "last_tick": "2026-07-09T00:00:00Z", "detail": "paused by user"}\n',
+                encoding="utf-8",
+            )
+
+            completed = watchdog(["status", "--repo", raw])
+            self.assertEqual(completed.returncode, 0, completed.stdout)
+            self.assertIn("skipped_paused", completed.stdout)
+            self.assertIn("2026-07-09T00:00:00Z", completed.stdout)
+            self.assertIn("paused by user", completed.stdout)
+
+    def test_watchdog_uninstall_removes_generated_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            artifact_root = self.scaffold(Path(raw))
+            setup = watchdog(
+                [
+                    "setup",
+                    "--repo",
+                    raw,
+                    "--kind",
+                    "launchd",
+                    "--cadence",
+                    "daily",
+                    "--label",
+                    "loop.watchdog.uninstall",
+                    "--command",
+                    "printf PASS",
+                ]
+            )
+            self.assertEqual(setup.returncode, 0, setup.stdout)
+            self.assertTrue((artifact_root / "watchdog" / "config.json").exists())
+            self.assertTrue(list((artifact_root / "schedules").glob("*.plist")))
+
+            completed = watchdog(["uninstall", "--repo", raw])
+            self.assertEqual(completed.returncode, 0, completed.stdout)
+            self.assertFalse((artifact_root / "watchdog" / "config.json").exists())
+            self.assertFalse(list((artifact_root / "schedules").glob("*.plist")))
+
     def test_cron_daily_uses_valid_daily_expression(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             completed = run(
@@ -310,6 +533,194 @@ class ToolingRegressionTests(unittest.TestCase):
             completed = run(["python3", "scripts/product_loop_audit.py", raw, "--min-level", "L2"])
             self.assertNotEqual(completed.returncode, 0, completed.stdout)
             self.assertIn("batch planning", completed.stdout.lower())
+
+    def test_scaffold_creates_runtime_criteria_and_archive_dirs(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            artifact_root = self.scaffold(Path(raw))
+
+            self.assertTrue((artifact_root / "criteria" / "current.md").is_file())
+            self.assertTrue((artifact_root / "benchmarks" / "active").is_dir())
+            self.assertTrue((artifact_root / "benchmarks" / "archive").is_dir())
+            self.assertTrue((artifact_root / "runs").is_dir())
+            self.assertTrue((artifact_root / "runs" / "archive").is_dir())
+
+            criteria = (artifact_root / "criteria" / "current.md").read_text(encoding="utf-8")
+            self.assertIn("Evaluation Contract", criteria)
+            self.assertIn("Contract status: draft | locked", criteria)
+            self.assertIn("Primary metric", criteria)
+            self.assertIn("Acceptance Criteria", criteria)
+            self.assertIn("Benchmark seeds", criteria)
+
+    def test_select_benchmarks_reads_split_active_case_files(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            artifact_root = self.scaffold(Path(raw))
+            split_case = artifact_root / "benchmarks" / "active" / "checkout-visible-flow.md"
+            split_case.write_text(
+                "\n".join(
+                    [
+                        "## Regression Case: checkout-visible-flow",
+                        "",
+                        "- Source run-log entry: 2026-07-09T00:00:00Z",
+                        "- Error class: ui_regression",
+                        "- Surface/URL: checkout web-route",
+                        "- Trigger condition: checkout submit button regresses",
+                        "- Playwright steps: open checkout and submit",
+                        "- Expected result: checkout completes",
+                        "- Failure evidence: submit button was hidden",
+                        "- Matching rule: checkout web-route ux-product activation",
+                        "- Owner profile: ux-product",
+                        "- Last failed: 2026-07-09T00:00:00Z",
+                        "- Last passed: 2026-07-09T00:00:00Z",
+                        "- Status: active",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            completed = run(
+                [
+                    "python3",
+                    "scripts/select_benchmarks.py",
+                    "--repo",
+                    raw,
+                    "--profile",
+                    "ux-product",
+                    "--intent",
+                    "UX_OPTIMIZE",
+                    "--surface",
+                    "checkout web-route",
+                    "--metric",
+                    "activation",
+                    "--require",
+                ]
+            )
+            self.assertEqual(completed.returncode, 0, completed.stdout)
+            self.assertIn("checkout-visible-flow", completed.stdout)
+            self.assertIn("benchmarks/active/checkout-visible-flow.md", completed.stdout)
+
+    def test_select_benchmarks_ignores_archive_case_files(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            artifact_root = self.scaffold(Path(raw))
+            archived_case = artifact_root / "benchmarks" / "archive" / "checkout-visible-flow.md"
+            archived_case.write_text(
+                "\n".join(
+                    [
+                        "## Regression Case: checkout-visible-flow",
+                        "",
+                        "- Source run-log entry: 2026-07-09T00:00:00Z",
+                        "- Error class: ui_regression",
+                        "- Surface/URL: checkout web-route",
+                        "- Trigger condition: checkout submit button regresses",
+                        "- Playwright steps: open checkout and submit",
+                        "- Expected result: checkout completes",
+                        "- Failure evidence: submit button was hidden",
+                        "- Matching rule: checkout web-route ux-product activation",
+                        "- Owner profile: ux-product",
+                        "- Last failed: 2026-07-09T00:00:00Z",
+                        "- Last passed: 2026-07-09T00:00:00Z",
+                        "- Status: active",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            completed = run(
+                [
+                    "python3",
+                    "scripts/select_benchmarks.py",
+                    "--repo",
+                    raw,
+                    "--profile",
+                    "ux-product",
+                    "--intent",
+                    "UX_OPTIMIZE",
+                    "--surface",
+                    "checkout web-route",
+                    "--metric",
+                    "activation",
+                    "--require",
+                ]
+            )
+            self.assertNotEqual(completed.returncode, 0, completed.stdout)
+            self.assertIn("Selected 0 benchmark case", completed.stdout)
+            self.assertNotIn("checkout-visible-flow", completed.stdout)
+
+    def test_pressure_eval_covers_evaluation_contract_before_action(self) -> None:
+        completed = run(
+            [
+                "python3",
+                "benchmark/run_pressure_eval.py",
+                "--case",
+                "evaluation_contract_before_action",
+                "--transcripts",
+                "benchmark/fixtures/pass",
+            ]
+        )
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertIn("PASS evaluation_contract_before_action", completed.stdout)
+
+    def test_templates_include_scale_retention_archive_guidance(self) -> None:
+        benchmark = (ROOT / "assets" / "templates" / "PRODUCT_LOOP_BENCHMARK.md").read_text(encoding="utf-8")
+        run_log = (ROOT / "assets" / "templates" / "product-loop-run-log.template.md").read_text(encoding="utf-8")
+        state_schema = (ROOT / "references" / "state-schema.md").read_text(encoding="utf-8")
+
+        self.assertIn("benchmarks/active/<case-id>.md", benchmark)
+        self.assertIn("benchmarks/archive/<case-id>.md", benchmark)
+        self.assertNotIn("## Regression Case: sample-case-id", benchmark)
+        self.assertIn("runs/archive/", run_log)
+        self.assertIn("runs/archive/", state_schema)
+
+    def test_audit_fails_when_latest_run_log_entry_is_unstructured(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            artifact_root = Path(raw) / "loop-runs"
+            shutil.copytree(ROOT / "self" / "loop-runs", artifact_root)
+            log_path = artifact_root / "product-loop-run-log.md"
+            with log_path.open("a", encoding="utf-8") as handle:
+                handle.write(
+                    "\n### 2099-01-01T00:00:00Z\n\n"
+                    "- Profile: engineering-quality\n"
+                    "- Verdict: PASS\n"
+                    "- Next scheduling decision: stop_success\n"
+                )
+
+            completed = run(["python3", "scripts/product_loop_audit.py", str(artifact_root), "--min-level", "L3"])
+            self.assertNotEqual(completed.returncode, 0, completed.stdout)
+            self.assertIn("latest run-log entry invalid", completed.stdout.lower())
+
+    def test_skill_frontmatter_description_is_trigger_only(self) -> None:
+        text = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        match = re.search(r"^description:\s*(.+)$", text, re.MULTILINE)
+        self.assertIsNotNone(match)
+        description = match.group(1).strip().strip('"')
+        self.assertTrue(description.startswith("Use when "), description)
+        self.assertNotRegex(description, r"\b(prioritize|hypotheses|verify evidence|persist learnings|schedule the next loop)\b")
+
+    def test_operation_uses_canonical_next_actions(self) -> None:
+        text = (ROOT / "references" / "operation.md").read_text(encoding="utf-8")
+        self.assertIn("`stop_success`", text)
+        self.assertIn("`run_again_now`", text)
+        self.assertNotIn("`NEXT_ITERATION`", text)
+        self.assertNotIn("`REPLAN`", text)
+
+    def test_select_benchmarks_matches_skill_package_self_development(self) -> None:
+        completed = run(
+            [
+                "python3",
+                "scripts/select_benchmarks.py",
+                "--repo",
+                str(ROOT),
+                "--profile",
+                "engineering-quality",
+                "--intent",
+                "ENGINEERING_QUALITY",
+                "--surface",
+                "skill-package",
+                "--include-skill",
+                "--require",
+            ]
+        )
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertIn("strict_run_log_validator", completed.stdout)
 
 
 if __name__ == "__main__":

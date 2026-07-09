@@ -236,6 +236,11 @@
         "product-loop-run-log\\.md",
         "PRODUCT_LOOP_BENCHMARK\\.md",
         "product-loop-budget\\.md",
+        "criteria/current\\.md",
+        "benchmarks/active/",
+        "benchmarks/archive/",
+        "runs/",
+        "runs/archive/",
         "AGENT_HANDOFF\\.md",
         "worktree-map\\.md",
         "agent-tasks/",
@@ -245,6 +250,52 @@
       ],
       "forbidden_patterns": [
         "\\boverwrite\\b[\\s\\S]{0,120}\\bwithout\\b[\\s\\S]{0,80}\\b--force\\b"
+      ]
+    },
+    {
+      "id": "evaluation_contract_before_action",
+      "critical": true,
+      "description": "Actioning loops must lock a repo-local evaluation contract with metric, criteria, benchmark seeds, and verification flow before changing the product.",
+      "transcript": "evaluation_contract_before_action.md",
+      "required_patterns": [
+        "\\.loop-harness/criteria/current\\.md",
+        "\\bEvaluation Contract\\b",
+        "\\bContract status\\b[\\s\\S]{0,60}\\blocked\\b",
+        "\\bprimary metric\\b|\\blocked acceptance rubric\\b",
+        "\\bbaseline window\\b",
+        "\\btarget minimum\\b|\\btarget_min\\b",
+        "\\bAcceptance Criteria\\b|\\bacceptance criteria\\b",
+        "\\bBenchmark seeds\\b|\\bbenchmark seed\\b",
+        "\\bPlaywright\\b[\\s\\S]{0,160}\\bflow steps\\b|\\bflow steps\\b[\\s\\S]{0,160}\\bPlaywright\\b",
+        "\\buser confirmation\\b|\\bconfirmed\\b|\\bsafely inferred\\b",
+        "\\bbefore actioning\\b|\\bbefore product changes\\b",
+        "\\breport-only\\b|\\bevaluation-contract bootstrap\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bactioning\\b[\\s\\S]{0,160}\\bwithout\\b[\\s\\S]{0,80}\\bEvaluation Contract\\b",
+        "\\bContract status\\b[\\s\\S]{0,60}\\bdraft\\b[\\s\\S]{0,200}\\bactioning\\b",
+        "\\bPASS\\b[\\s\\S]{0,200}\\bwithout\\b[\\s\\S]{0,80}\\bcriteria/current\\.md\\b"
+      ]
+    },
+    {
+      "id": "split_active_benchmark_files",
+      "critical": true,
+      "description": "Benchmark selection must read compact PRODUCT_LOOP_BENCHMARK.md plus split active cases under .loop-harness/benchmarks/active.",
+      "transcript": "split_active_benchmark_files.md",
+      "required_patterns": [
+        "\\bselect_benchmarks\\.py\\b",
+        "\\.loop-harness/PRODUCT_LOOP_BENCHMARK\\.md",
+        "\\.loop-harness/benchmarks/active/",
+        "\\bcompact active index\\b|\\bcompact index\\b",
+        "\\bcheckout-visible-flow\\b",
+        "\\bmatching rule\\b",
+        "\\bowner profile\\b",
+        "\\bStatus\\b[\\s\\S]{0,40}\\bactive\\b",
+        "\\bbefore\\b[\\s\\S]{0,100}\\boptimization\\b|\\bbefore\\b[\\s\\S]{0,100}\\bactioning\\b"
+      ],
+      "forbidden_patterns": [
+        "\\bonly\\b[\\s\\S]{0,120}PRODUCT_LOOP_BENCHMARK\\.md",
+        "\\bignored\\b[\\s\\S]{0,120}benchmarks/active"
       ]
     },
     {
@@ -327,7 +378,7 @@
     {
       "id": "strict_run_log_validator",
       "critical": true,
-      "description": "Latest run-log entry must have strict raw result, finding, and benchmark promotion fields.",
+      "description": "Engineering-quality skill-package self-development must ensure the latest run-log entry has strict raw result, finding, and benchmark promotion fields.",
       "transcript": "strict_run_log_validator.md",
       "required_patterns": [
         "\\bvalidate_run_log_entry\\.py\\b",
@@ -341,6 +392,56 @@
       ],
       "forbidden_patterns": [
         "\\bPASS\\b[\\s\\S]{0,160}\\bplaceholder\\b"
+      ]
+    },
+    {
+      "id": "skill_package_self_benchmark_selection",
+      "critical": true,
+      "description": "Loop-harness self-development must select a matching engineering-quality skill-package benchmark before actioning.",
+      "transcript": "skill_package_self_benchmark_selection.md",
+      "required_patterns": [
+        "\\bselect_benchmarks\\.py\\b",
+        "--profile\\s+engineering-quality",
+        "--intent\\s+ENGINEERING_QUALITY",
+        "--surface\\s+skill-package",
+        "--include-skill",
+        "--require",
+        "\\bstrict_run_log_validator\\b",
+        "\\bbefore actioning\\b|\\bbefore accepting\\b"
+      ],
+      "forbidden_patterns": [
+        "Selected 0 benchmark case",
+        "\\bactioning\\b[\\s\\S]{0,160}\\bwithout\\b[\\s\\S]{0,80}\\bstrict_run_log_validator\\b"
+      ]
+    },
+    {
+      "id": "watchdog_scheduler_lifecycle",
+      "critical": true,
+      "description": "Watchdog scheduling must support lifecycle commands, status JSON, overlap protection, criteria gating, and generated OS scheduler artifacts.",
+      "transcript": "watchdog_scheduler_lifecycle.md",
+      "required_patterns": [
+        "\\bscripts/watchdog\\.py\\b",
+        "\\bsetup\\b",
+        "\\bstatus\\b",
+        "\\bpause\\b",
+        "\\bresume\\b",
+        "\\btail\\b",
+        "\\buninstall\\b",
+        "\\btick\\b[\\s\\S]{0,120}\\bpaused\\b|\\bpaused\\b[\\s\\S]{0,120}\\btick\\b",
+        "\\.loop-harness/watchdog/status\\.json\\b",
+        "\\.loop-harness/watchdog/run\\.lock\\b",
+        "\\bskipped_overlap\\b|\\bno-overlap\\b|\\boverlap lock\\b",
+        "\\.loop-harness/criteria/current\\.md\\b",
+        "\\bContract status\\b[\\s\\S]{0,80}\\blocked\\b|\\blocked criteria\\b",
+        "\\bblocked_unlocked_criteria\\b|\\brefus(e|ed|es)\\b[\\s\\S]{0,120}\\brun-until-done\\b",
+        "\\.loop-harness/schedules/",
+        "\\blaunchd\\b|\\bcron\\b|\\bplist\\b",
+        "\\bgenerated artifacts\\b|\\bgenerated watchdog\\b"
+      ],
+      "forbidden_patterns": [
+        "\\brun-until-done\\b[\\s\\S]{0,180}\\bContract status\\b[\\s\\S]{0,80}\\bdraft\\b[\\s\\S]{0,120}\\bstarted\\b",
+        "\\boverlap\\b[\\s\\S]{0,160}\\bstarted second\\b",
+        "\\buninstall\\b[\\s\\S]{0,160}\\bleft\\b[\\s\\S]{0,80}\\bplist\\b"
       ]
     },
     {

@@ -15,3 +15,5 @@ Escalation owner/inbox:
 - Do not run actioning changes when a human gate is triggered.
 - Stop run-until-done when success, explicit iteration cap, budget, plateau, regression, human gate, or environment blocker fires.
 - Pause scheduled loops when budget is exceeded.
+- Scheduled ticks use `.loop-harness/schedules/` status and locks; one tick runs at a time.
+- Scheduled `run-until-done` requires locked criteria before actioning.

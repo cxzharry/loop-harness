@@ -8,6 +8,8 @@ import json
 import re
 from pathlib import Path
 
+from validate_run_log_entry import validate as validate_latest_run_log
+
 
 FILES = {
     "loop": "PRODUCT_LOOP.md",
@@ -150,6 +152,13 @@ def read_artifact(root: Path, key: str, filename: str) -> str:
     return ""
 
 
+def read_active_benchmark_cases(root: Path) -> str:
+    split_dir = root / "benchmarks" / "active"
+    if not split_dir.is_dir():
+        return ""
+    return "\n".join(read(path) for path in sorted(split_dir.glob("*.md")))
+
+
 def has_required_artifacts(root: Path) -> bool:
     return all((root / filename).exists() for key, filename in FILES.items() if key not in OPTIONAL_FILES)
 
@@ -229,6 +238,13 @@ def is_template_root(root: Path) -> bool:
 
 def is_loop_instance_root(root: Path) -> bool:
     return has_required_artifacts(root) and not is_template_root(root)
+
+
+def latest_run_log_errors(root: Path, has_run_log_entries: bool, loop_instance_root: bool) -> list[str]:
+    if not loop_instance_root or not has_run_log_entries:
+        return []
+    result = validate_latest_run_log(root / FILES["log"], require_promotion_on_fail=True)
+    return [str(error) for error in result.get("errors", [])]
 
 
 def entry_blocks(log_content: str) -> list[str]:
@@ -325,6 +341,8 @@ def main() -> int:
     findings: list[str] = []
 
     contents = {key: read_artifact(root, key, filename) for key, filename in FILES.items()}
+    split_active_benchmarks = read_active_benchmark_cases(root)
+    benchmark_case_content = "\n".join([contents["benchmark"], split_active_benchmarks])
 
     for key, filename in FILES.items():
         if contents[key]:
@@ -339,7 +357,7 @@ def main() -> int:
             else:
                 findings.append(f"MISS {filename}")
 
-    combined = "\n".join(contents.values())
+    combined = "\n".join([*contents.values(), split_active_benchmarks])
     negated_evidence_hits = negated_evidence_claims(combined)
 
     phase_hits = present_fields(combined, PHASES)
@@ -447,7 +465,7 @@ def main() -> int:
     else:
         findings.append("OK execution orchestration fields present")
 
-    regression_case_hits = present_fields(contents["benchmark"], REGRESSION_CASE_FIELDS)
+    regression_case_hits = present_fields(benchmark_case_content, REGRESSION_CASE_FIELDS)
     score += min(10, len(regression_case_hits))
     missing_regression_case_fields = sorted(set(REGRESSION_CASE_FIELDS) - set(regression_case_hits))
     if missing_regression_case_fields:
@@ -457,7 +475,7 @@ def main() -> int:
 
     failed_iterations_present = has_terminal_failed_iteration(contents["log"])
     real_active_regression_cases = [
-        case for case in parse_regression_cases(contents["benchmark"])
+        case for case in parse_regression_cases(benchmark_case_content)
         if is_real_active_regression_case(case)
     ]
     missing_promoted_regression_cases = failed_iterations_present and not real_active_regression_cases
@@ -516,6 +534,7 @@ def main() -> int:
     else:
         findings.append("WARN no proven state activity")
 
+    latest_log_errors = latest_run_log_errors(root, has_run_log_entries, loop_instance_root)
     if has_run_log_entries:
         score += 7
         findings.append("OK run log has entries")
@@ -528,6 +547,8 @@ def main() -> int:
 
     if negated_evidence_hits:
         findings.append(f"MISS negated evidence claims present: {len(negated_evidence_hits)}")
+    if latest_log_errors:
+        findings.append(f"MISS latest run-log entry invalid: {'; '.join(latest_log_errors)}")
 
     score = min(score, 100)
     if not template_root and not (has_state_activity and has_run_log_entries):
@@ -535,6 +556,8 @@ def main() -> int:
     if missing_promoted_regression_cases:
         score = min(score, 89)
     if negated_evidence_hits:
+        score = min(score, 59)
+    if latest_log_errors:
         score = min(score, 59)
     if missing_batch_planning_fields:
         score = min(score, 59)
@@ -554,6 +577,7 @@ def main() -> int:
         and not missing_regression_case_fields
         and not missing_promoted_regression_cases
         and not missing_stop_conditions
+        and not latest_log_errors
         and has_state_activity
         and has_run_log_entries
     ):
@@ -569,7 +593,7 @@ def main() -> int:
     for finding in findings:
         print(f"- {finding}")
 
-    hard_fail = bool(negated_evidence_hits or missing_promoted_regression_cases)
+    hard_fail = bool(negated_evidence_hits or missing_promoted_regression_cases or latest_log_errors)
     has_warning_or_miss = any(
         finding.startswith("WARN ") or finding.startswith("MISS ")
         for finding in findings

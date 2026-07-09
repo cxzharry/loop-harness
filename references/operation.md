@@ -31,25 +31,39 @@ Do not ask when a safe default exists. Record the assumption in `.loop-harness/P
 
 1. Identify intent and product surface in one line.
 2. Use `.loop-harness/` as the default artifact root in target repos unless the user explicitly chooses another folder.
-3. Load existing artifacts if present: `.loop-harness/PRODUCT_LOOP.md`, `.loop-harness/PRODUCT_LOOP_STATE.md`, `.loop-harness/product-loop-run-log.md`, `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`, and `.loop-harness/product-loop-budget.md`.
+3. Load existing artifacts if present: `.loop-harness/PRODUCT_LOOP.md`, `.loop-harness/PRODUCT_LOOP_STATE.md`, `.loop-harness/criteria/current.md`, `.loop-harness/product-loop-run-log.md`, `.loop-harness/PRODUCT_LOOP_BENCHMARK.md`, and `.loop-harness/product-loop-budget.md`.
 4. Scaffold missing ongoing-loop artifacts into `.loop-harness/` from `assets/templates/`.
 5. Select profiles using `references/profiles.md`.
 6. Select a pattern using `references/patterns.md` and `assets/templates/product-loop-patterns.json` when cadence or recurring scope matters.
 7. Select local global criteria/seeds when useful with `scripts/select_knowledge.py --repo <repo> --profile <profile> --intent <intent> --surface <surface>`.
-8. Ask only unresolved metric, target, risk, or schedule decisions.
-9. Plan the first iteration as an execution batch with lane decomposition before actioning.
-10. Run `scripts/product_loop_audit.py <repo-root-or-.loop-harness> --min-level L2` after scaffolding or artifact changes. The audit auto-detects `<repo>/.loop-harness` when passed a repo root.
-11. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
+8. Lock the evaluation contract in `.loop-harness/criteria/current.md`: metric or rubric, target minimum, baseline/data source, acceptance criteria, benchmark seeds, Playwright flow when applicable, and human gates.
+9. Ask only unresolved metric, target, criteria, benchmark seed, risk, or schedule decisions.
+10. Plan the first iteration as an execution batch with lane decomposition before actioning.
+11. Run `scripts/product_loop_audit.py <repo-root-or-.loop-harness> --min-level L2` after scaffolding or artifact changes. The audit auto-detects `<repo>/.loop-harness` when passed a repo root.
+12. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
 
 ## Execution Modes
 
 - `report-only`: discover, verify signals, persist state, and stop without source changes.
 - `run-until-done`: repeat full five-phase iterations until a stop condition fires.
-- `scheduled`: run on cadence; each tick may be report-only or run-until-done within budget.
+- `scheduled`: run on cadence; each tick starts a fresh process and continues from `.loop-harness/*` state within budget.
 
 There is no `action-once` mode. Any loop that changes files, product behavior, docs, metrics, or release state must use `run-until-done`, even when it stops after one successful iteration.
 
-`run-until-done` requires a measurable target or locked rubric, safety budget or kill switch, `target_min`, stop conditions, plateau patience, and human gates written to state before actioning. For metric targets, confirm primary metric, baseline window, target threshold, and sample/window or proxy evidence.
+`run-until-done` requires `criteria/current.md` with `Contract status: locked`, a measurable target or locked rubric, safety budget or kill switch, `target_min`, stop conditions, plateau patience, and human gates written to state before actioning. For metric targets, confirm primary metric, baseline window, target threshold, and sample/window or proxy evidence.
+
+## Evaluation Contract Bootstrap
+
+Before any actioning iteration, `.loop-harness/criteria/current.md` must contain the locked evaluation contract with `Contract status: locked`:
+- Product surface and user flow.
+- Primary metric or acceptance rubric.
+- Baseline window, data source, target, target minimum, and direction.
+- Acceptance criteria and pass thresholds.
+- Benchmark seeds and activation rule.
+- Playwright URL/route, viewports, flow steps, assertions, and screenshot/trace expectation when app verification is relevant.
+- User confirmations, human gates, and non-goals.
+
+If this contract is missing, materially incomplete, or not `Contract status: locked`, use `report-only` discovery or an `evaluation-contract` bootstrap batch. Do not action product changes until the missing metric, criteria, benchmark seed, target, or verification source is inferred safely or confirmed by the user. Record selected global/local criteria and benchmark seeds in `PRODUCT_LOOP_STATE.md`; seeds are not active benchmarks until repo-local evidence promotes them.
 
 ## Five Phases
 
@@ -59,7 +73,7 @@ Every iteration must execute all five phases. An iteration is one planned execut
 2. Handoff: choose one execution batch containing one or more bounded lanes, each with hypothesis, scope, risk, owner boundary, allowed files/surfaces, verification command, dependencies, and worktree plan.
 3. Verification: run matching benchmark cases first, then profile-specific checks after action.
 4. Persistence: record verdict, evidence, scores, failed attempts, benchmark promotions, agent handoffs, worktree mappings, and what not to retry.
-5. Scheduling: decide `SUCCESS`, `NEXT_ITERATION`, `REPLAN`, `PAUSE`, `ESCALATE`, or `STOP`.
+5. Scheduling: choose exactly one next action: `stop_success`, `run_again_now`, `schedule`, `pause`, or `escalate`.
 
 Find real signals before proposing work. Convert findings into a bounded execution batch. If multiple findings are independent, decompose them into lanes and execute them within the same iteration; do not create separate iterations just because there is more than one known lane.
 
@@ -145,10 +159,12 @@ Error classes: `ui_regression`, `runtime_error`, `metric_regression`, `content_d
 
 Benchmark gate:
 - During Discovery, load `.loop-harness/PRODUCT_LOOP_BENCHMARK.md` and select active cases matching current surface, profile, files, or metric.
+- Also load active split case files under `.loop-harness/benchmarks/active/*.md` when present. Keep `.loop-harness/PRODUCT_LOOP_BENCHMARK.md` as a compact active index; archive retired or old cases under `.loop-harness/benchmarks/archive/`.
 - During Discovery, optionally select general local criteria/seeds from `~/.codex/loop-harness/knowledge/` through `scripts/select_knowledge.py`; do not load the whole global store into context.
 - During Verification, run matching active cases before accepting new intervention.
 - If an active case fails, classify as `REGRESSION`, persist it, and fix that case before optimizing forward.
 - Retire a benchmark only when the product surface or requirement is intentionally removed and recorded in state.
+- When `product-loop-run-log.md` grows large, keep recent entries plus archive pointers there and move detailed historical entries under `.loop-harness/runs/archive/`.
 
 ## Global Knowledge Promotion
 
@@ -161,6 +177,24 @@ python3 <skill-dir>/scripts/promote_global_knowledge.py --repo <repo>
 ```
 
 Default behavior writes a gated candidate to `~/.codex/loop-harness/knowledge/inbox/`. Use `--promote` only after explicit approval or review confirms the finding is generally reusable. Keep env blockers, domain-specific failures, and one-off noise repo-local.
+
+## Watchdog Scheduler
+
+Use `scripts/watchdog.py` for local recurring loops:
+
+```bash
+python3 <skill-dir>/scripts/watchdog.py setup --repo <repo> --command "<loop command>" --cadence daily
+python3 <skill-dir>/scripts/watchdog.py status --repo <repo>
+python3 <skill-dir>/scripts/watchdog.py pause --repo <repo>
+python3 <skill-dir>/scripts/watchdog.py resume --repo <repo>
+python3 <skill-dir>/scripts/watchdog.py tail --repo <repo>
+python3 <skill-dir>/scripts/watchdog.py tick --repo <repo>
+python3 <skill-dir>/scripts/watchdog.py uninstall --repo <repo>
+```
+
+Scheduler status, tick logs, pause markers, and lock files live under `.loop-harness/schedules/`. Each scheduled tick is a new process that reads `.loop-harness/PRODUCT_LOOP_STATE.md`, `.loop-harness/criteria/current.md`, the run log, benchmark index, budget, handoff, and worktree map. It resumes the loop through persisted state; the interactive chat transcript stays outside the scheduler contract.
+
+Before `setup`, run the cost check, confirm the kill switch, and ensure `run-until-done` loops have locked criteria. During `tick`, acquire the schedule lock before running and release it after persistence; an existing lock means the next tick exits with a persisted scheduling decision instead of overlapping work.
 
 ## Output Report
 

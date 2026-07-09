@@ -1,6 +1,6 @@
 # Product Loop Benchmark
 
-Promote stable evidence from `product-loop-run-log.md` after each iteration.
+Promote stable evidence from `product-loop-run-log.md` after each iteration. Keep this file as a compact active index when benchmark volume grows; store large active cases in `benchmarks/active/<case-id>.md` and retired cases in `benchmarks/archive/<case-id>.md`.
 
 ## Known-Good Flows
 
@@ -25,8 +25,22 @@ Promote stable evidence from `product-loop-run-log.md` after each iteration.
 
 ## Regression Cases
 
-## Regression Case: sample-case-id
+Keep this section as a compact active index. Put full active cases in `benchmarks/active/<case-id>.md`; put retired cases in `benchmarks/archive/<case-id>.md`.
 
+### Active Case Index
+
+- Case id:
+- Source: benchmarks/active/<case-id>.md
+- Matching rule:
+- Owner profile:
+- Status: active
+- Last failed:
+
+### Split Active Case Schema
+
+Each `benchmarks/active/<case-id>.md` file uses these fields:
+
+- Regression case:
 - Source run-log entry:
 - Error class: ui_regression | runtime_error | metric_regression | content_drift | env_blocker | scope_regression
 - Surface/URL:
@@ -38,7 +52,7 @@ Promote stable evidence from `product-loop-run-log.md` after each iteration.
 - Owner profile:
 - Last failed:
 - Last passed:
-- Status: active | retired
+- Status: active
 
 ## Metric Baselines
 
