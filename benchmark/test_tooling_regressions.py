@@ -45,6 +45,13 @@ class ToolingRegressionTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("$loop-harness", readme)
         self.assertIn("does not automatically install operating-system scheduler jobs", readme)
+        self.assertIn("self/loop-runs/", (ROOT / ".gitignore").read_text(encoding="utf-8"))
+        if (ROOT / ".git").exists():
+            tracked_self_runs = run(["git", "ls-files", "self/loop-runs"])
+            self.assertEqual(tracked_self_runs.returncode, 0, tracked_self_runs.stdout)
+            self.assertEqual(tracked_self_runs.stdout.strip(), "")
+        else:
+            self.assertFalse((ROOT / "self" / "loop-runs").exists())
 
         text_file_suffixes = {".md", ".py", ".json", ".yaml", ".yml", ".toml", ".txt"}
         text_file_names = {".gitignore", "LICENSE"}
@@ -672,8 +679,7 @@ class ToolingRegressionTests(unittest.TestCase):
 
     def test_audit_fails_when_latest_run_log_entry_is_unstructured(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
-            artifact_root = Path(raw) / "loop-runs"
-            shutil.copytree(ROOT / "self" / "loop-runs", artifact_root)
+            artifact_root = self.scaffold(Path(raw))
             log_path = artifact_root / "product-loop-run-log.md"
             with log_path.open("a", encoding="utf-8") as handle:
                 handle.write(

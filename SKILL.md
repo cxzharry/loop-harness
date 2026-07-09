@@ -191,10 +191,10 @@ python3 <skill-dir>/benchmark/test_tooling_regressions.py
 python3 <skill-creator-dir>/scripts/quick_validate.py <skill-dir>
 ```
 
-For loop-harness self-development, source and installed skill should both pass:
+For loop-harness self-development, source and installed skill should both pass public package gates. Local self-run artifacts may exist under ignored `self/loop-runs/`, but they are not part of the public package:
 
 ```bash
-python3 scripts/product_loop_audit.py self/loop-runs --min-level L3
-python3 scripts/validate_run_log_entry.py self/loop-runs/product-loop-run-log.md
 python3 scripts/product_loop_audit.py assets/templates --min-level L2
+python3 benchmark/test_tooling_regressions.py
+python3 benchmark/run_pressure_eval.py --transcripts benchmark/fixtures/pass
 ```

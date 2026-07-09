@@ -102,11 +102,11 @@ Useful validation commands for this repo:
 ```bash
 python3 benchmark/test_tooling_regressions.py
 python3 benchmark/run_pressure_eval.py --transcripts benchmark/fixtures/pass
-python3 scripts/product_loop_audit.py self/loop-runs --strict
 python3 scripts/product_loop_audit.py assets/templates --min-level L2
-python3 scripts/validate_run_log_entry.py self/loop-runs/product-loop-run-log.md
 python3 -m py_compile scripts/*.py benchmark/*.py
 ```
+
+`self/loop-runs/` is intentionally ignored. It can hold local self-development run artifacts, but it should not be committed or published.
 
 For target repositories, validate generated loop artifacts with:
 

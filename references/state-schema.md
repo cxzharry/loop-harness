@@ -26,7 +26,7 @@ In target repos, put loop artifacts in `.loop-harness/` by default:
   agent-tasks/
 ```
 
-Use another folder only when the user explicitly requests it or the repo already has an established loop artifact root. The loop-harness skill's own self-development artifacts use `self/loop-runs/` as an internal exception.
+Use another folder only when the user explicitly requests it or the repo already has an established loop artifact root. The loop-harness skill's own self-development artifacts may use ignored local `self/loop-runs/` as an internal exception, but that folder is not part of the public skill package.
 
 ## PRODUCT_LOOP.md
 
