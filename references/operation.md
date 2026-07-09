@@ -23,6 +23,11 @@ before any material change to Metrics, Criteria, or Benchmark. The agent may
 recommend candidate defaults, but the saved review selection plus CLI
 confirmation is the source of truth.
 
+Existing locked contract fast path: when `.loop-harness/criteria/current.md`
+is already `Contract status: locked`, `.loop-harness/review/evaluation-contract-confirmed.json`
+exists, and Metrics, Criteria, and Benchmark are unchanged, skip the A-lite review page
+and continue from stored state. Reopen the selection gate only when the existing contract is missing, stale, or materially incomplete.
+
 Use `AskUserQuestion` or the review page for decisions that need human choice:
 - Primary product surface or user flow.
 - Primary metric when `METRIC_OPTIMIZE` or `run-until-done` depends on it.
@@ -44,15 +49,16 @@ then wait for saved selection and CLI confirmation before locking the contract.
 4. Scaffold missing ongoing-loop artifacts into `.loop-harness/` from `assets/templates/`.
 5. Select profiles using `references/profiles.md`.
 6. Select a pattern using `references/patterns.md` and `assets/templates/product-loop-patterns.json` when cadence or recurring scope matters.
-7. Select local global criteria/seeds when useful with `scripts/select_knowledge.py --repo <repo> --profile <profile> --intent <intent> --surface <surface>`.
-8. Brainstorm the candidate Metrics, Criteria, and Benchmark options with the user. Use an installed brainstorming workflow when available; otherwise ask concise equivalent questions.
-9. Render and serve the A-lite review page with `scripts/review_contract.py`. The page must group choices as `Metrics`, `Criteria`, and `Benchmark`, with independent No/Yes controls for every candidate.
-10. Read `.loop-harness/review/evaluation-contract-selection.json`, summarize the selected Metrics, Criteria, and Benchmark in CLI, and ask for explicit confirmation.
-11. Lock the human-confirmed evaluation contract in `.loop-harness/criteria/current.md` using `scripts/review_contract.py confirm --repo <repo> --yes`.
-12. Ask only unresolved target, evidence-source, risk, or schedule decisions after the selection gate.
-13. Plan the first iteration as an execution batch with lane decomposition before actioning.
-14. Run `scripts/product_loop_audit.py <repo-root-or-.loop-harness> --min-level L2` after scaffolding or artifact changes. The audit auto-detects `<repo>/.loop-harness` when passed a repo root.
-15. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
+7. Select local global criteria/seeds only when the contract is missing criteria/seeds, this is a first run, or the user asks for reusable/global guidance.
+8. If the existing locked contract fast path applies, skip the A-lite review page and continue to benchmark selection and batch planning.
+9. Otherwise, brainstorm the candidate Metrics, Criteria, and Benchmark options with the user. Use an installed brainstorming workflow when available; otherwise ask concise equivalent questions.
+10. Serve the A-lite review page with `scripts/review_contract.py serve --repo <repo> --candidates <candidates.json>`. The page must group choices as `Metrics`, `Criteria`, and `Benchmark`, with independent No/Yes controls for every candidate.
+11. Read `.loop-harness/review/evaluation-contract-selection.json`, summarize the selected Metrics, Criteria, and Benchmark in CLI, and ask for explicit confirmation.
+12. Lock the human-confirmed evaluation contract in `.loop-harness/criteria/current.md` using `scripts/review_contract.py confirm --repo <repo> --yes`.
+13. Ask only unresolved target, evidence-source, risk, or schedule decisions after the selection gate.
+14. Plan the first iteration as an execution batch with lane decomposition before actioning.
+15. Run `scripts/product_loop_audit.py <repo-root-or-.loop-harness> --min-level L2` after scaffolding, material artifact schema changes, or before scheduled/unattended operation. For ordinary iterations that only append run evidence, validate the latest run-log entry instead.
+16. Run `scripts/product_loop_cost.py --pattern <pattern-id> --level L1|L2|L3 --cadence <interval>` before scheduling recurring loops.
 
 ## Execution Modes
 

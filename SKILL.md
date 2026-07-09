@@ -18,7 +18,7 @@ Run controlled product optimization loops with evidence. Use this skill to impro
 - Failed, regressed, partial-defect, ENV, or UNKNOWN iterations must append raw evidence plus a structured finding to `product-loop-run-log.md`, then promote durable failures into `PRODUCT_LOOP_BENCHMARK.md`.
 - Do not create separate `error-log.md`, `findings.md`, or `run-log-error.md`.
 - Run matching active benchmark cases before accepting new optimization.
-- Before first actioning in a repo, or before any material change to Metrics, Criteria, or Benchmark, create a human-confirmed evaluation contract. Brainstorm candidates with the user, render the A-lite review page, wait for saved HTML selection, summarize the selection in CLI, and lock `criteria/current.md` only after CLI confirmation.
+- Before first actioning in a repo, or before any material change to Metrics, Criteria, or Benchmark, create a human-confirmed evaluation contract. Brainstorm candidates with the user, serve the A-lite review page, wait for saved HTML selection, summarize the selection in CLI, and lock `criteria/current.md` only after CLI confirmation.
 - Do not silently auto-select Metrics, Criteria, or Benchmark for actioning work. Agent recommendations may default to Yes in the review page, but the saved selection plus CLI confirmation is the source of truth.
 - Before actioning, lock an evaluation contract with confirmed Metrics, Criteria, Benchmark seeds, target, verification source, and Playwright flow when applicable.
 - Before actioning, plan the current iteration as an execution batch with one or more bounded lanes; do not serialize independent lanes into separate iterations.
@@ -48,36 +48,38 @@ Read `references/operation.md` before running a loop. Then load only the relevan
 python3 <skill-dir>/scripts/init_loop.py <product-repo-root>
 ```
 
-5. Select profile(s), pattern, execution mode, target, safety budget, plateau patience, stop conditions, and human gates.
-6. Select matching active benchmark cases before actioning:
+5. Existing locked contract fast path: if `criteria/current.md` is already `Contract status: locked`, `review/evaluation-contract-confirmed.json` exists, and the user is not changing Metrics, Criteria, or Benchmark, skip the A-lite review page. Continue from stored state, select matching benchmarks, plan the current batch, and action only against the locked contract.
+6. Select profile(s), pattern, execution mode, target, safety budget, plateau patience, stop conditions, and human gates.
+7. Select matching active benchmark cases before actioning:
 
 ```bash
 python3 <skill-dir>/scripts/select_benchmarks.py --repo <repo> --profile <profile> --intent <intent> --surface <surface> --include-skill --require
 ```
 
-7. Select matching local global knowledge when useful:
+8. Select matching local global knowledge only when the contract is missing criteria/seeds, this is a first run, or the user wants reusable/global guidance:
 
 ```bash
 python3 <skill-dir>/scripts/select_knowledge.py --repo <repo> --profile <profile> --intent <intent> --surface <surface>
 ```
 
-8. For first runs or material contract changes, run an evaluation-contract bootstrap before actioning:
+9. For first runs or material contract changes, run an evaluation-contract bootstrap before actioning:
 
 ```bash
-python3 <skill-dir>/scripts/review_contract.py render --repo <repo> --candidates <candidates.json>
 python3 <skill-dir>/scripts/review_contract.py serve --repo <repo> --candidates <candidates.json>
 python3 <skill-dir>/scripts/review_contract.py confirm --repo <repo> --yes
 ```
 
+Run `render` only when a static preview is needed; `serve` renders the review page before starting the local selection server.
+
 The page must group choices as `Metrics`, `Criteria`, and `Benchmark`. Each candidate has independent No/Yes selection; `(Recommended)` candidates default to Yes and non-recommended candidates default to No. The agent must summarize the saved selection in CLI and get explicit confirmation before running `confirm --yes`.
-9. Lock `.loop-harness/criteria/current.md` before actioning. If the human-confirmed evaluation contract is missing, run report-only/evaluation-contract bootstrap; do not make product changes.
-10. Run artifact audit after scaffold/artifact changes:
+10. Lock `.loop-harness/criteria/current.md` before actioning. If the human-confirmed evaluation contract is missing, run report-only/evaluation-contract bootstrap; do not make product changes.
+11. Run artifact audit after scaffold, material artifact schema changes, or before scheduled/unattended operation:
 
 ```bash
 python3 <skill-dir>/scripts/product_loop_audit.py <product-repo-root-or-.loop-harness> --min-level L2
 ```
 
-Use `--min-level L3` for scheduled/unattended loops. Use `--strict` for CI or release gates. Hard misses such as negated evidence or missing promoted active regression cases must exit non-zero.
+For ordinary iterations that only append run evidence, validate the latest run-log entry instead of re-running a full artifact audit. Use `--min-level L3` for scheduled/unattended loops. Use `--strict` for CI or release gates. Hard misses such as negated evidence or missing promoted active regression cases must exit non-zero.
 
 ## Planning Before Execute
 

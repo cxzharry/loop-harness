@@ -267,6 +267,21 @@ class ToolingRegressionTests(unittest.TestCase):
         self.assertIn("CLI confirmed: yes", combined)
         self.assertNotIn("Do not ask when a safe default exists", operation)
 
+    def test_skill_documents_fast_path_without_duplicate_review_render(self) -> None:
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        operation = (ROOT / "references" / "operation.md").read_text(encoding="utf-8")
+        combined = "\n".join([skill, operation])
+        self.assertIn("Existing locked contract fast path", combined)
+        self.assertIn("skip the A-lite review page", combined)
+        self.assertIn("serve --repo <repo> --candidates <candidates.json>", skill)
+        self.assertNotRegex(
+            skill,
+            r"review_contract\.py render --repo <repo> --candidates <candidates\.json>[\s\S]{0,220}"
+            r"review_contract\.py serve --repo <repo> --candidates <candidates\.json>",
+        )
+        self.assertIn("Run `render` only when a static preview is needed", skill)
+        self.assertIn("only when the existing contract is missing, stale, or materially incomplete", operation)
+
     def test_controller_does_not_pass_negated_pass_text(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             tmp = Path(raw)
