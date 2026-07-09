@@ -1,14 +1,36 @@
+# OS/editor
 .DS_Store
+*.swp
 
+# Python/cache
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.coverage
+coverage/
 
+# Local environments/secrets
 .venv/
 venv/
+.env
+.env.*
+!.env.example
 
+# Node/browser-test artifacts
+node_modules/
+playwright-report/
+test-results/
+*.trace.zip
+*.webm
+
+# Local logs and scratch work
+*.log
+tmp/
+
+# Loop-harness runtime artifacts
 .worktrees/
 .loop-harness/
 self/loop-runs/
+docs/superpowers/
